@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "sourceMap": true,
+    "noImplicitAny": false,
+    "module": "system",
+    "target": "es6",
+    "allowJs": false,
+    "outFile": "../dist/app.js"
+  }
+}

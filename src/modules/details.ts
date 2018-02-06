@@ -1,6 +1,6 @@
-import { App } from "../app";
 
-namespace wallet.modules{
+
+namespace wallet.module{
     export class DetailModule{
         module:HTMLDivElement;
         body:HTMLDivElement;
@@ -14,7 +14,8 @@ namespace wallet.modules{
             this.btn.innerText="UTXO";
             app.main.appendChild(this.module);
         }
-        update(detail:Detail){
+        update(detail: wallet.entity.Detail)
+        {
             this.module.hidden=false;
             this.body.innerHTML="";
             this.body.classList.add("row");
@@ -24,14 +25,14 @@ namespace wallet.modules{
                 let name = balance.name.map((name)=>{ return name.name}).join('|');
                 ul += '<li class="list-group-item"> '+name+' : '+balance.balance+'</li>';
             }
-            let addrpanel = new Panel();
+            let addrpanel = new wallet.tools.Panel();
             let div1=document.createElement("div");
             let div2=document.createElement("div");
             addrpanel.setTitle("Address");
             addrpanel.setBody(detail.address);
             addrpanel.init(div1);
             div1.classList.add("col-lg-6");
-            let balanPanel = new Panel();
+            let balanPanel = new wallet.tools.Panel();
             balanPanel.setTitle("Balance");
             balanPanel.setUl(ul);
             balanPanel.init(div2);

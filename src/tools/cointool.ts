@@ -1,9 +1,9 @@
 ﻿///<reference path="../../lib/neo-ts.d.ts"/>
 /// <reference types="jquery" />
-import { WWW } from "./wwwtool";
-import { UTXO }from "../Entitys";
 
-namespace tools{
+
+namespace wallet.tools
+{
 
     export class CoinTool
     {
@@ -41,8 +41,8 @@ namespace tools{
                 CoinTool.name2assetID[name] = id;
             }
         }
-    
-        static makeTran(utxos: { [id: string]: UTXO[] }, targetaddr: string, assetid: string, sendcount: Neo.Fixed8): ThinNeo.Transaction
+
+        static makeTran(utxos: { [id: string]: entity.UTXO[] }, targetaddr: string, assetid: string, sendcount: Neo.Fixed8): ThinNeo.Transaction
         {
             if (sendcount.compareTo(Neo.Fixed8.Zero) <= 0)
                 throw new Error("can not send zero.");
@@ -50,9 +50,9 @@ namespace tools{
             tran.type = ThinNeo.TransactionType.ContractTransaction;
             tran.version = 0;//0 or 1
             tran.extdata = null;
-    
+
             tran.attributes = [];
-    
+
             tran.inputs = [];
             var scraddr: string = "";
             utxos[assetid].sort((a, b) =>
@@ -84,8 +84,8 @@ namespace tools{
                 output.value = sendcount;
                 output.toAddress = ThinNeo.Helper.GetPublicKeyScriptHash_FromAddress(targetaddr);
                 tran.outputs.push(output);
-    
-    
+
+
                 //找零
                 var change = count.subtract(sendcount);
                 if (change.compareTo(Neo.Fixed8.Zero) > 0)
@@ -95,7 +95,7 @@ namespace tools{
                     outputchange.value = change;
                     outputchange.assetId = assetid.hexToBytes().reverse();
                     tran.outputs.push(outputchange);
-    
+
                 }
             }
             else
@@ -104,7 +104,7 @@ namespace tools{
             }
             return tran;
         }
-    
+
     }
-    
+
 }

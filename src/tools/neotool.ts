@@ -164,8 +164,8 @@ namespace wallet.tools{
         /**
          * getPriKeyform
          */
-        public static async getPriKeyfromAccount(scrypt: ThinNeo.nep6ScryptParameters,password:string,account:ThinNeo.nep6account):Promise<result> {
-            let promise:Promise<result> = 
+        public static async getPriKeyfromAccount(scrypt: ThinNeo.nep6ScryptParameters, password: string, account: ThinNeo.nep6account): Promise<wallet.entity.result> {
+            let promise: Promise<wallet.entity.result> = 
             new Promise((resolve,reject)=>{
                 account.getPrivateKey(scrypt, password, (info, result) => {
                     if (info == "finish") {

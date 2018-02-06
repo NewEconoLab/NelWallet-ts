@@ -1,5 +1,5 @@
-import { App } from '../app';
-namespace modules{
+
+namespace wallet.module{
     export class NavbarModule{
         public ul:HTMLUListElement=document.createElement("ul");
         public liNep5:HTMLLIElement = document.createElement("li");

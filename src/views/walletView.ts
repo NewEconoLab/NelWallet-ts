@@ -1,9 +1,7 @@
-import { result, Detail, Balance, UTXO } from "../Entitys";
-import { Panel } from '../tools/viewtool';
-import { DetailModule } from "../modules/details";
+
 
 export class walletView{
-    static verifWif(res:result){
+    static verifWif(res: wallet.entity.result){
         if (res.err) {   //如果填写了wif则进行验证
             $("#wif-input").removeClass("has-success");
                 $("#wif-input").addClass("has-error");
@@ -16,7 +14,7 @@ export class walletView{
         }
     }
 
-    static showDetails(detail:Detail) {
+    static showDetails(detail: wallet.entity.Detail) {
         let detailview = document.getElementById("wallet-details") as HTMLDivElement;
         
         detailview.innerHTML="";
@@ -26,11 +24,11 @@ export class walletView{
             let name = balance.name.map((name)=>{ return name.name}).join('|');
             ul += '<li class="list-group-item"> '+name+' : '+balance.balance+'</li>';
         }
-        let addrpanel = new Panel();
+        let addrpanel = new wallet.tools.Panel();
         addrpanel.setTitle("Address");
         addrpanel.setBody(detail.address);
         addrpanel.init(detailview);
-        let balanPanel = new Panel();
+        let balanPanel = new wallet.tools.Panel();
         balanPanel.setTitle("Balance");
         balanPanel.setUl(ul);
         balanPanel.init(detailview);
@@ -39,7 +37,7 @@ export class walletView{
     /**
      * showUtxo
      */
-    static showUtxo(utxos:UTXO[]) {
+    static showUtxo(utxos: wallet.entity.UTXO[]) {
         $("#wallet-utxos").empty();
         utxos.forEach((utxo)=>{
             let html ='';
