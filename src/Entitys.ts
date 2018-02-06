@@ -96,7 +96,9 @@ namespace wallet.entity
         address: string
         constructor(pubkey: Uint8Array, prikey: Uint8Array, address: string)
         {
-
+            this.prikey = prikey;
+            this.pubkey = pubkey;
+            this.address = address;
         }
 
     }

@@ -15,7 +15,7 @@ namespace wallet
         {
             this.app.detail.btn.onclick = () =>
             {
-                // this.app.walletFunction.utxo(this)
+                this.app.walletFunction.utxo(this.app.loadKey.address);
             }
         }
 

@@ -7,13 +7,14 @@ namespace wallet
     export class App
     {
         walletController: WalletController;
-        walletFunction: wallet.WalletFunction;
+        walletFunction: WalletFunction;
         navbar: module.NavbarModule;
         detail: module.DetailModule;
         sign: module.SignModule;
         transfer: module.TransferModule;
         transaction: module.TransactionModule;
         utxo: module.UtxosModule;
+        loadKey: entity.loadKey;
         main: HTMLDivElement;
         constructor()
         {
