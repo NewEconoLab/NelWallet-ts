@@ -15,7 +15,9 @@ export class WalletController{
      * showUtxo
      */
     public showUtxo() {
-        
+        this.app.detail.btn.onclick=()=>{
+            this.app.walletFunction.utxo(this)
+        }
     }
 
 
