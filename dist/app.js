@@ -359,8 +359,10 @@ var wallet;
                     console.log("成功返回：" + res.result[0]);
                     $('#importNep6').modal('hide');
                     if (res.result.length > 1) {
-                        let addrs = res.result.map(item => { return item.address; });
-                        //walletView.showSelectAddrs(addrs);
+                        let addrs = res.result.map((item) => {
+                            return item["address"];
+                        });
+                        wallet.tools.walletView.showSelectAddrs(addrs);
                     }
                     if (!res.err) {
                         this.loadKeys = res.result;
@@ -1041,77 +1043,73 @@ var wallet;
         tools.WWW = WWW;
     })(tools = wallet.tools || (wallet.tools = {}));
 })(wallet || (wallet = {}));
-System.register("views/walletView", [], function (exports_1, context_1) {
-    "use strict";
-    var __moduleName = context_1 && context_1.id;
-    var walletView;
-    return {
-        setters: [],
-        execute: function () {
-            walletView = class walletView {
-                static verifWif(res) {
-                    if (res.err) {
-                        $("#wif-input").removeClass("has-success");
-                        $("#wif-input").addClass("has-error");
-                        $("#wif-input").children("p").text(res.result);
-                    }
-                    else {
-                        $("#wif-input").addClass("has-success");
-                        $("#wif-input").removeClass("has-error");
-                        $("#wif-input").children("p").text(res.result);
-                        $("#importWif").modal("hide");
-                    }
+var wallet;
+(function (wallet) {
+    var tools;
+    (function (tools) {
+        class walletView {
+            static verifWif(res) {
+                if (res.err) {
+                    $("#wif-input").removeClass("has-success");
+                    $("#wif-input").addClass("has-error");
+                    $("#wif-input").children("p").text(res.result);
                 }
-                static showDetails(detail) {
-                    let detailview = document.getElementById("wallet-details");
-                    detailview.innerHTML = "";
-                    let ul = '';
-                    for (let n = 0; n < detail.balances.length; n++) {
-                        const balance = detail.balances[n];
-                        let name = balance.name.map((name) => { return name.name; }).join('|');
-                        ul += '<li class="list-group-item"> ' + name + ' : ' + balance.balance + '</li>';
-                    }
-                    let addrpanel = new wallet.tools.Panel();
-                    addrpanel.setTitle("Address");
-                    addrpanel.setBody(detail.address);
-                    addrpanel.init(detailview);
-                    let balanPanel = new wallet.tools.Panel();
-                    balanPanel.setTitle("Balance");
-                    balanPanel.setUl(ul);
-                    balanPanel.init(detailview);
-                    // $("#wallet-details").append(html);
+                else {
+                    $("#wif-input").addClass("has-success");
+                    $("#wif-input").removeClass("has-error");
+                    $("#wif-input").children("p").text(res.result);
+                    $("#importWif").modal("hide");
                 }
-                /**
-                 * showUtxo
-                 */
-                static showUtxo(utxos) {
-                    $("#wallet-utxos").empty();
-                    utxos.forEach((utxo) => {
-                        let html = '';
-                        html += "<tr>";
-                        html += "<td class='code'>" + utxo.name;
-                        html += "</td>";
-                        html += "<td>" + utxo.value;
-                        html += "</td>";
-                        html += "<td><a class='code' target='_blank' rel='external nofollow' href='./txInfo.html?txid=" + utxo.txid + "'>" + utxo.txid;
-                        html += "</a>[" + utxo.n + "]</td>";
-                        html += "</tr>";
-                        $("#wallet-utxos").append(html);
-                    });
+            }
+            static showDetails(detail) {
+                let detailview = document.getElementById("wallet-details");
+                detailview.innerHTML = "";
+                let ul = '';
+                for (let n = 0; n < detail.balances.length; n++) {
+                    const balance = detail.balances[n];
+                    let name = balance.name.map((name) => { return name.name; }).join('|');
+                    ul += '<li class="list-group-item"> ' + name + ' : ' + balance.balance + '</li>';
                 }
-                /**
-                 * showSelectAddrs
-                 */
-                static showSelectAddrs(addrs) {
-                    $("#selectAddress").empty();
-                    addrs.forEach((addr) => {
-                        $("#selectAddress").append('<label><input type="radio" name="addrRadio" id="addrRadio1" value="' + addr + '" aria-label="...">' + addr + '</label>');
-                    });
-                    $("#selectAddr").modal("show");
-                }
-            };
-            exports_1("walletView", walletView);
+                let addrpanel = new wallet.tools.Panel();
+                addrpanel.setTitle("Address");
+                addrpanel.setBody(detail.address);
+                addrpanel.init(detailview);
+                let balanPanel = new wallet.tools.Panel();
+                balanPanel.setTitle("Balance");
+                balanPanel.setUl(ul);
+                balanPanel.init(detailview);
+                // $("#wallet-details").append(html);
+            }
+            /**
+             * showUtxo
+             */
+            static showUtxo(utxos) {
+                $("#wallet-utxos").empty();
+                utxos.forEach((utxo) => {
+                    let html = '';
+                    html += "<tr>";
+                    html += "<td class='code'>" + utxo.name;
+                    html += "</td>";
+                    html += "<td>" + utxo.value;
+                    html += "</td>";
+                    html += "<td><a class='code' target='_blank' rel='external nofollow' href='./txInfo.html?txid=" + utxo.txid + "'>" + utxo.txid;
+                    html += "</a>[" + utxo.n + "]</td>";
+                    html += "</tr>";
+                    $("#wallet-utxos").append(html);
+                });
+            }
+            /**
+             * showSelectAddrs
+             */
+            static showSelectAddrs(addrs) {
+                $("#selectAddress").empty();
+                addrs.forEach((addr) => {
+                    $("#selectAddress").append('<label><input type="radio" name="addrRadio" id="addrRadio1" value="' + addr + '" aria-label="...">' + addr + '</label>');
+                });
+                $("#selectAddr").modal("show");
+            }
         }
-    };
-});
+        tools.walletView = walletView;
+    })(tools = wallet.tools || (wallet.tools = {}));
+})(wallet || (wallet = {}));
 //# sourceMappingURL=app.js.map

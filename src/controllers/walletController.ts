@@ -114,8 +114,12 @@ namespace wallet
                     $('#importNep6').modal('hide');
                     if (res.result.length > 1)
                     {
-                        let addrs: string[] = res.result.map(item => { return item.address });
-                        //walletView.showSelectAddrs(addrs);
+                        let addrs: string[] =
+                            res.result.map(item =>
+                            {
+                                return item["address"]
+                            });
+                        tools.walletView.showSelectAddrs(addrs);
                     }
                     if (!res.err)
                     {
