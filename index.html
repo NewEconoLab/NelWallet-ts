@@ -14,7 +14,7 @@
 
     <!-- Bootstrap core CSS -->
     <link href="./css/bootstrap.min.css" rel="stylesheet">
-    <!-- <link href="./css/mystyle.css" rel="stylesheet"> -->
+    <link href="./css/mystyle.css" rel="stylesheet">
     <!-- <link href="./css/bootstrap-table.css" rel="stylesheet"> -->
 
     <!-- Custom styles for this template -->
@@ -47,78 +47,6 @@
             <div id="main"></div>
         </div>
 
-
-        <!-- 
-        <div class="jumbotron masthead" id="wallet-details">
-            <caption>
-                <h3>Details</h3>
-            </caption>
-            <div class="row" id="wallet-details">
-            </div>
-        </div>
-
-        <div class="jumbotron masthead" id="wallet-utxo">
-            <table class="table table-hover cool">
-                <caption>
-                    <h3>UTXO</h3>
-                </caption>
-                <thead>
-                    <tr>
-                        <th>asset</th>
-                        <th>number</th>
-                        <th>txid</th>
-                    </tr>
-                </thead>
-                <tbody id="wallet-utxos"></tbody>
-            </table>
-        </div>
-
-        <div class="row jumbotron masthead " id="wallet-transaction">
-            <div class="col-lg-6">
-                <caption>
-                    <h3>Transfer</h3>
-                </caption>
-                <div>
-                    <div class="form-group">
-                        <label for="exampleInputPassword1">To Address</label>
-                        <input type="text" class="form-control" id="targetaddr" placeholder="Enter the address you want to trade">
-                    </div>
-                    <div class="form-group">
-                        <label for="exampleInputPassword1">Amount</label>
-                        <input type="number" class="form-control" id="transfer-amount" placeholder="Enter the amount you want to trade ">
-                    </div>
-                    <div class="form-group">
-                        <label for="exampleInputPassword1">Type</label>
-                        <select name="" id="transfer-asset">
-                            <option value="NEO">NEO </option>
-                            <option value="GAS">GAS </option>
-                        </select>
-                    </div>
-                    <div class=" form-group">
-                        <button class="btn btn-info" id="send-transfer">Make transfer</button>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-6">
-                <div class="panel panel-default" style="height:100%">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">Transaction</h3>
-                        <button class=" btn btn-primary" id="Sing-send">Sing</button>
-                    </div>
-                    <ul id="transactionInfo" class="list-group">
-                    </ul>
-                </div>
-                <div class="panel panel-default" id="sign" style="height:100%" hidden>
-                    <div class="panel-heading">
-                        <h3 class="panel-title">Sign</h3>
-                    </div>
-                    <ul id="Sign-list" class="list-group">
-                    </ul>
-                    <div class=" panel-footer">
-                        <button id="btn-boadcast" class="btn btn-info">boadcast it</div>
-                    </div>
-                </div>
-            </div> -->
     </div>
     <!-- /container -->
     <!-- modal -->
@@ -209,7 +137,7 @@
         </div>
     </div>
     <!-- /importNep6 -->
-    <div class="modal fade" id="selectAddr" tabindex="-1" role="dialog">
+    <div class="modal fade" id="selectAddr" tabindex="-1" >
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -231,6 +159,22 @@
                 </div>
             </div>
         </div>
+    </div>
+    <!-- transaction -->
+    <div class="modal fade" tabindex="-1" role="dialog" >
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title" id="myModalLabel">Transaction</h4>
+                </div>
+                <div class="modal-body"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Sign</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
     </div>
     <!-- /modal -->
 

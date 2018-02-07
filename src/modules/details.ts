@@ -17,7 +17,7 @@ namespace wallet.module{
             app.main.appendChild(this.module);
 
             this.btn.onclick = () => {
-                this.app.walletFunction.utxo(this.app.loadKey.address);
+                this.app.walletFunction.utxoShow(this.app.loadKey.address);
             }
             
         }
@@ -48,6 +48,7 @@ namespace wallet.module{
             this.body.appendChild(div1);
             this.body.appendChild(div2);
             this.body.appendChild(this.btn);
+            this.app.dapp.initDApp_WhoAmI();
     
         }
     }

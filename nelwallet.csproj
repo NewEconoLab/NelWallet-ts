@@ -98,7 +98,9 @@
     <TypeScriptCompile Include="src\controllers\walletController.ts" />
     <TypeScriptCompile Include="src\controllers\walletFunction.ts" />
     <TypeScriptCompile Include="src\Entitys.ts" />
+    <TypeScriptCompile Include="src\modules\dapp.ts" />
     <TypeScriptCompile Include="src\modules\details.ts" />
+    <TypeScriptCompile Include="src\modules\importwallet.ts" />
     <TypeScriptCompile Include="src\modules\navbar.ts" />
     <TypeScriptCompile Include="src\modules\sign.ts" />
     <TypeScriptCompile Include="src\modules\transaction.ts" />

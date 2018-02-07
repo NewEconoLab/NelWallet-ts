@@ -3,7 +3,7 @@
     export class WWW
     {
         static api: string = "http://47.96.168.8:81/api/testnet";
-        static rpc: string = "";
+        static rpc: string = "http://47.96.168.8:20332/";
         static rpcName: string = "";
         static makeRpcUrl(url: string, method: string, ..._params: any[])
         {
@@ -71,12 +71,12 @@
             return r;
         }
 
-        static async rpc_postRawTransaction(data: Uint8Array)
+        static async rpc_postRawTransaction(data: Uint8Array): Promise<boolean>
         {
             var postdata = WWW.makeRpcPostBody("sendrawtransaction", data.toHexString());
             var result = await fetch(WWW.rpc, { "method": "post", "body": JSON.stringify(postdata) });
             var json = await result.json();
-            var r = json["result"];
+            var r = json["result"] as boolean;
             return r;
         }
 
@@ -100,6 +100,16 @@
             var r = json["result"];
             var height = parseInt(r as string) - 1;
             return height;
+        }
+        static async  rpc_getStorage(scripthash: Uint8Array, key: Uint8Array): Promise<string>
+        {
+            var str = WWW.makeRpcUrl(WWW.rpc, "getstorage", scripthash.toHexString(), key.toHexString());
+            var result = await fetch(str, { "method": "get" });
+            var json = await result.json();
+            if (json["result"] == null)
+                return null;
+            var r = json["result"] as string;
+            return r;
         }
     }
 

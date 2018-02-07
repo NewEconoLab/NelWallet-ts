@@ -134,6 +134,7 @@ namespace wallet
             {
                 let addr = $('#selectAddress input[name="addrRadio"]:checked ').val().toString();
                 this.details(addr);
+                this.app.loadKey = this.loadKeys.find(item => { return item.address == addr });
                 $("#selectAddr").modal("hide");
             })
         }
@@ -236,6 +237,7 @@ namespace wallet
                     {
                         item.name = allAsset.find(val => val.id == item.asset).name.map((name) => { return name.name }).join("|");
                     })
+                    this.app.utxos = utxos;
                 } catch (error)
                 {
 

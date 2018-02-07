@@ -13,8 +13,10 @@ namespace wallet
         sign: module.SignModule;
         transfer: module.TransferModule;
         transaction: module.TransactionModule;
-        utxo: module.UtxosModule;
+        utxoModule: module.UtxosModule;
+        dapp: module.Dapp;
         loadKey: entity.loadKey;
+        utxos: entity.UTXO[];
         main: HTMLDivElement;
         constructor()
         {
@@ -25,8 +27,9 @@ namespace wallet
             this.transaction = new module.TransactionModule();
             this.walletController = new WalletController();
             this.walletFunction = new WalletFunction();
-            this.utxo = new module.UtxosModule();
+            this.utxoModule = new module.UtxosModule();
             this.navbar = new module.NavbarModule();
+            this.dapp = new module.Dapp();
         }
         async start()
         {
@@ -38,11 +41,13 @@ namespace wallet
 
             this.sign.init(this);
 
-            this.utxo.init(this);
+            this.utxoModule.init(this);
 
             this.transfer.init(this);
 
             this.transaction.init(this);
+
+            this.dapp.init(this);
 
             this.walletController.start(this);
 

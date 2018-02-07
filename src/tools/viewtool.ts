@@ -82,4 +82,107 @@ namespace wallet.tools{
             return {jumbotron:jumbotron,body:body};
         }
     }
+
+    export class BootsModule
+    {
+        static getFormGroup(title): HTMLDivElement
+        {
+            let form = document.createElement("div");
+            form.classList.add("form-group");
+            if (title)
+            {
+                let label = document.createElement("label");
+                label.textContent = title;
+                label.classList.add("form-lable");
+                form.appendChild(label);
+            }
+            return form;
+        }
+        static setLiInUl(ul: HTMLUListElement, value: string)
+        {
+            let li = document.createElement("li");
+            li.classList.add("list-group-item");
+            li.innerHTML = value;
+            ul.appendChild(li);
+        }
+    }
+
+    export class Model
+    {
+        model: HTMLDivElement;
+        dialog: HTMLDivElement;
+        content: HTMLDivElement;
+        body: HTMLDivElement;
+        footer: HTMLDivElement;
+        head: HTMLHeadingElement;
+        header: HTMLDivElement;
+        send: HTMLButtonElement;
+        X: HTMLButtonElement;
+        close: HTMLButtonElement;
+        _title: string;
+        id: string;
+
+        constructor()
+        {
+            this.head = document.createElement("h4");
+            this.model = document.createElement("div");
+            this.dialog = document.createElement("div");
+            this.content = document.createElement("div");
+            this.header = document.createElement("div");
+            this.body = document.createElement("div");
+            this.footer = document.createElement("div");
+            this.send = document.createElement("button");
+            this.close = document.createElement("button");
+            this.X = document.createElement("button");
+
+            this.model.classList.add("modal", "fade");
+            this.dialog.classList.add("modal-dialog");
+            this.content.classList.add("modal-content");
+            this.header.classList.add("modal-header");
+            this.footer.classList.add("modal-footer");
+            this.head.classList.add("modal-title");
+            this.X.classList.add("close");
+            this.X.innerHTML = "&times;";
+            this.close.innerText = "Close";
+            this.send.innerText = "Send";
+            this.X.setAttribute("data-dismiss", "modal");
+            this.X.setAttribute("aria-hidden", "true");
+            this.close.classList.add("btn", "btn-default")
+            this.close.setAttribute("data-dismiss", "modal");
+            this.send.classList.add("btn","btn-primary");
+
+
+            this.model.appendChild(this.dialog);
+            this.model.tabIndex = -1;            
+            this.dialog.appendChild(this.content);
+            this.content.appendChild(this.header);
+            this.content.appendChild(this.body);
+            this.content.appendChild(this.footer);
+            this.footer.appendChild(this.close);
+            this.footer.appendChild(this.send);
+            this.header.appendChild(this.X);
+
+
+        }
+        init(id: string, title: string, pater: HTMLElement)
+        {
+            this.title = title;
+            this.model.id = id;
+            this.head.innerText = this.title;
+            this.header.appendChild(this.head);
+            pater.appendChild(this.model);
+        }
+
+        set title(title: string)
+        {
+            this._title = title;
+            this.head.textContent = this._title;
+            this.header.appendChild(this.head);
+        }
+        get title()
+        {
+            return this._title;
+        }
+
+    }
 }

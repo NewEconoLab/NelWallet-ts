@@ -23,8 +23,9 @@ var wallet;
             this.transaction = new wallet.module.TransactionModule();
             this.walletController = new wallet.WalletController();
             this.walletFunction = new wallet.WalletFunction();
-            this.utxo = new wallet.module.UtxosModule();
+            this.utxoModule = new wallet.module.UtxosModule();
             this.navbar = new wallet.module.NavbarModule();
+            this.dapp = new wallet.module.Dapp();
         }
         start() {
             return __awaiter(this, void 0, void 0, function* () {
@@ -32,9 +33,10 @@ var wallet;
                 this.detail.init(this);
                 this.navbar.init(this);
                 this.sign.init(this);
-                this.utxo.init(this);
+                this.utxoModule.init(this);
                 this.transfer.init(this);
                 this.transaction.init(this);
+                this.dapp.init(this);
                 this.walletController.start(this);
                 this.walletFunction.init(this);
             });
@@ -377,6 +379,7 @@ var wallet;
             $("#send-Addr").click(() => {
                 let addr = $('#selectAddress input[name="addrRadio"]:checked ').val().toString();
                 this.details(addr);
+                this.app.loadKey = this.loadKeys.find(item => { return item.address == addr; });
                 $("#selectAddr").modal("hide");
             });
         }
@@ -455,6 +458,7 @@ var wallet;
                         utxos.map((item) => {
                             item.name = allAsset.find(val => val.id == item.asset).name.map((name) => { return name.name; }).join("|");
                         });
+                        this.app.utxos = utxos;
                     }
                     catch (error) {
                     }
@@ -494,15 +498,17 @@ var wallet;
     }
     wallet.WalletController = WalletController;
 })(wallet || (wallet = {}));
+///<reference path="../../lib/neo-ts.d.ts"/>
 ///<reference path="../app.ts"/>
 var wallet;
+///<reference path="../../lib/neo-ts.d.ts"/>
 ///<reference path="../app.ts"/>
 (function (wallet) {
     class WalletFunction {
         init(app) {
             this.app = app;
         }
-        getassets(utxos) {
+        static getassets(utxos) {
             var assets = {};
             for (var i in utxos) {
                 var item = utxos[i];
@@ -550,9 +556,9 @@ var wallet;
         /**
          * utxo
          */
-        utxo(address) {
+        utxoShow(address) {
             return __awaiter(this, void 0, void 0, function* () {
-                this.app.utxo.module.hidden = this.app.utxo.module.hidden == true ? false : true;
+                this.app.utxoModule.module.hidden = this.app.utxoModule.module.hidden == true ? false : true;
                 try {
                     let allAsset = yield wallet.tools.WWW.api_getAllAssets();
                     allAsset.map((asset) => {
@@ -567,14 +573,140 @@ var wallet;
                     utxos.map((item) => {
                         item.name = allAsset.find(val => val.id == item.asset).name.map((name) => { return name.name; }).join("|");
                     });
-                    this.app.utxo.update(utxos);
+                    this.app.utxoModule.update(utxos);
                 }
                 catch (error) {
                 }
             });
         }
+        initDApp_WhoAmI() {
+            var pkey = this.app.loadKey.pubkey;
+            console.log("(No need key)");
+            console.log("Target");
+            var target = "AdzQq1DmnHq86yyDUkU3jKdHwLUe2MLAVv";
+            let btn = document.createElement("button");
+            btn.innerText = "test";
+            this.app.main.appendChild(btn);
+            btn.onclick = () => __awaiter(this, void 0, void 0, function* () {
+                //dapp ��ʽ1 ��GetStorage  ����ʽ2 invokeScript����NEP5������
+                var targetaddr = target;
+                var scriptaddress = "0x42832a25cf11d0ceee5629cb8b4daee9bac207ca";
+                var key = ThinNeo.Helper.GetPublicKeyScriptHash_FromAddress(targetaddr);
+                var script = scriptaddress.hexToBytes(); //script Ҫ����
+                var r = yield wallet.tools.WWW.rpc_getStorage(script, key);
+                if (r == null) {
+                    alert("no name");
+                }
+                else {
+                    var hex = r.hexToBytes();
+                    alert("name=" + ThinNeo.Helper.Bytes2String(hex));
+                }
+            });
+            if (pkey != null) {
+                var pkeyhash = ThinNeo.Helper.GetPublicKeyScriptHashFromPublicKey(pkey);
+                console.log("(need key)");
+                console.log("cur addr=" + this.app.loadKey.address);
+                console.log("setName");
+                //btnSetName.onclick = () =>
+                //{
+                //    var targetaddr = this.app.panelLoadKey.address;//���Լ�ת��
+                //    var assetid = CoinTool.id_GAS;
+                //    var _count = Neo.Fixed8.Zero;//�������У��Ǹ�gas���ڶ��ǲ�ҪǮ��
+                //    var tran = CoinTool.makeTran(this.main.panelUTXO.assets, targetaddr, assetid, _count);
+                //    tran.type = ThinNeo.TransactionType.InvocationTransaction;
+                //    tran.extdata = new ThinNeo.InvokeTransData();
+                //    let script = null;
+                //    var sb = new ThinNeo.ScriptBuilder();
+                //    var scriptaddress = "0x42832a25cf11d0ceee5629cb8b4daee9bac207ca".hexToBytes().reverse();
+                //    sb.EmitPushString(inputName.value);//���Ƶڶ���������������
+                //    sb.EmitPushBytes(this.main.panelLoadKey.pubkey);//���Ƶڶ����������Լ��Ĺ�Կ
+                //    sb.EmitAppCall(scriptaddress);
+                //    (tran.extdata as ThinNeo.InvokeTransData).script = sb.ToArray();
+                //    //����һ��gas����
+                //    //�������gas�������ˣ����ܺ�Լִ�л�ʧ�ܡ�
+                //    //�������gas����>10,���ױ��붪��gas���������ܺ�Լִ�л�ʧ��
+                //    (tran.extdata as ThinNeo.InvokeTransData).gas = Neo.Fixed8.fromNumber(1.0);
+                //    this.main.panelTransaction.setTran(tran);
+                //};
+            }
+        }
     }
     wallet.WalletFunction = WalletFunction;
+})(wallet || (wallet = {}));
+var wallet;
+(function (wallet) {
+    var module;
+    (function (module) {
+        class Dapp {
+            init(app) {
+                this.app = app;
+                let jum = wallet.tools.Jumbotron.creatJumbotron("Dapp");
+                this.module = jum.jumbotron;
+                this.body = jum.body;
+                this.getName = document.createElement("button");
+                this.getName.innerText = "GetName";
+                this.getName.classList.add("btn", "btn-info");
+                this.setName = document.createElement("button");
+                this.setName.classList.add("btn", "btn-info");
+                this.setName.innerText = "SetName";
+                this.getNamePanel = new wallet.tools.Panel();
+                this.getNamePanel.title.appendChild(this.getName);
+                this.app.main.appendChild(this.module);
+            }
+            initDApp_WhoAmI() {
+                var pkey = this.app.loadKey.pubkey;
+                console.log("(No need key)");
+                console.log("Target");
+                var target = this.app.loadKey.address;
+                this.body.appendChild(this.getNamePanel.palneDiv);
+                this.getName.onclick = () => __awaiter(this, void 0, void 0, function* () {
+                    //dapp 方式1 ，GetStorage  ，方式2 invokeScript，查NEP5余额就是
+                    var targetaddr = target;
+                    var scriptaddress = "0x42832a25cf11d0ceee5629cb8b4daee9bac207ca";
+                    var key = ThinNeo.Helper.GetPublicKeyScriptHash_FromAddress(targetaddr);
+                    var script = scriptaddress.hexToBytes(); //script 要反序
+                    var r = yield wallet.tools.WWW.rpc_getStorage(script, key);
+                    if (r == null) {
+                        this.getNamePanel.setBody("no name");
+                    }
+                    else {
+                        var hex = r.hexToBytes();
+                        this.getNamePanel.setBody("name=" + ThinNeo.Helper.Bytes2String(hex));
+                    }
+                });
+                if (pkey != null) {
+                    var pkeyhash = ThinNeo.Helper.GetPublicKeyScriptHashFromPublicKey(pkey);
+                    console.log("(need key)");
+                    console.log("cur addr=" + this.app.loadKey.address);
+                    console.log("setName");
+                    this.setName.onclick = () => {
+                    };
+                    //btnSetName.onclick = () =>
+                    //{
+                    //    var targetaddr = this.app.panelLoadKey.address;//给自己转账
+                    //    var assetid = CoinTool.id_GAS;
+                    //    var _count = Neo.Fixed8.Zero;//有数就行，是个gas以内都是不要钱的
+                    //    var tran = CoinTool.makeTran(this.main.panelUTXO.assets, targetaddr, assetid, _count);
+                    //    tran.type = ThinNeo.TransactionType.InvocationTransaction;
+                    //    tran.extdata = new ThinNeo.InvokeTransData();
+                    //    let script = null;
+                    //    var sb = new ThinNeo.ScriptBuilder();
+                    //    var scriptaddress = "0x42832a25cf11d0ceee5629cb8b4daee9bac207ca".hexToBytes().reverse();
+                    //    sb.EmitPushString(inputName.value);//先推第二个参数，新名字
+                    //    sb.EmitPushBytes(this.main.panelLoadKey.pubkey);//再推第二个参数，自己的公钥
+                    //    sb.EmitAppCall(scriptaddress);
+                    //    (tran.extdata as ThinNeo.InvokeTransData).script = sb.ToArray();
+                    //    //估计一个gas用量
+                    //    //如果估计gas用量少了，智能合约执行会失败。
+                    //    //如果估计gas用量>10,交易必须丢弃gas，否则智能合约执行会失败
+                    //    (tran.extdata as ThinNeo.InvokeTransData).gas = Neo.Fixed8.fromNumber(1.0);
+                    //    this.main.panelTransaction.setTran(tran);
+                    //};
+                }
+            }
+        }
+        module.Dapp = Dapp;
+    })(module = wallet.module || (wallet.module = {}));
 })(wallet || (wallet = {}));
 var wallet;
 (function (wallet) {
@@ -591,7 +723,7 @@ var wallet;
                 this.btn.innerText = "UTXO";
                 app.main.appendChild(this.module);
                 this.btn.onclick = () => {
-                    this.app.walletFunction.utxo(this.app.loadKey.address);
+                    this.app.walletFunction.utxoShow(this.app.loadKey.address);
                 };
             }
             update(detail) {
@@ -619,6 +751,7 @@ var wallet;
                 this.body.appendChild(div1);
                 this.body.appendChild(div2);
                 this.body.appendChild(this.btn);
+                this.app.dapp.initDApp_WhoAmI();
             }
         }
         module.DetailModule = DetailModule;
@@ -633,8 +766,8 @@ var wallet;
                 this.ul = document.createElement("ul");
                 this.liNep5 = document.createElement("li");
                 this.aNep5 = document.createElement("a");
-                this.liTransaction = document.createElement("li");
-                this.aTransaction = document.createElement("a");
+                this.liDapp = document.createElement("li");
+                this.aDapp = document.createElement("a");
                 this.liTransfer = document.createElement("li");
                 this.aTransfer = document.createElement("a");
             }
@@ -643,13 +776,13 @@ var wallet;
                 this.ul.classList.add('nav', 'nav-pills');
                 this.aNep5.textContent = "Nep5";
                 this.liNep5.appendChild(this.aNep5);
-                this.aTransaction.textContent = "Transaction";
-                this.liTransaction.appendChild(this.aTransaction);
+                this.aDapp.textContent = "Dapp...";
+                this.liDapp.appendChild(this.aDapp);
                 this.aTransfer.textContent = "Transfer";
                 this.liTransfer.appendChild(this.aTransfer);
                 this.liTransfer.classList.add("active");
                 this.ul.appendChild(this.liTransfer);
-                this.ul.appendChild(this.liTransaction);
+                this.ul.appendChild(this.liDapp);
                 this.ul.appendChild(this.liNep5);
                 // let main = document.getElementById("nav") as HTMLDivElement;
                 let main = this.app.main;
@@ -657,8 +790,8 @@ var wallet;
                 this.aNep5.onclick = () => {
                     this.cutlabe("Nep5");
                 };
-                this.aTransaction.onclick = () => {
-                    this.cutlabe("transaction");
+                this.aDapp.onclick = () => {
+                    this.cutlabe("Dapp");
                 };
                 this.aTransfer.onclick = () => {
                     this.cutlabe("transfer");
@@ -673,14 +806,6 @@ var wallet;
                     this.liNep5.classList.remove("active");
                     // this.app.sign.module.hidden=true;
                 }
-                if (str == "transaction") {
-                    this.liTransaction.classList.add("active");
-                    this.app.transaction.module.hidden = false;
-                }
-                else {
-                    this.liTransaction.classList.remove("active");
-                    this.app.transaction.module.hidden = true;
-                }
                 if (str == "transfer") {
                     this.liTransfer.classList.add("active");
                     this.app.transfer.module.hidden = false;
@@ -688,6 +813,14 @@ var wallet;
                 else {
                     this.liTransfer.classList.remove("active");
                     this.app.transfer.module.hidden = true;
+                }
+                if (str == "Dapp") {
+                    this.liDapp.classList.add("active");
+                    this.app.dapp.module.hidden = false;
+                }
+                else {
+                    this.liDapp.classList.remove("active");
+                    this.app.dapp.module.hidden = true;
                 }
             }
         }
@@ -700,10 +833,15 @@ var wallet;
     (function (module) {
         class SignModule {
             init(app) {
-                let jum = wallet.tools.Jumbotron.creatJumbotron("Sign");
-                this.module = jum.jumbotron;
-                this.body = jum.body;
-                app.main.appendChild(this.module);
+                this.app = app;
+                this.model = app.transaction.model;
+            }
+            setTran(tran, inputaddr) {
+                if (tran.witnesses == null)
+                    tran.witnesses = [];
+                let txid = tran.GetHash().clone().reverse().toHexString();
+                this.model.title = "Sign";
+                this.model.body.innerHTML = "";
             }
         }
         module.SignModule = SignModule;
@@ -715,10 +853,74 @@ var wallet;
     (function (module) {
         class TransactionModule {
             init(app) {
-                let jum = wallet.tools.Jumbotron.creatJumbotron("Transaction");
-                this.module = jum.jumbotron;
-                this.body = jum.body;
-                app.main.appendChild(this.module);
+                this.app = app;
+                this.model = new wallet.tools.Model();
+                this.model.init("Transaction", "Transaction", document.body);
+                this.model.send.innerText = "Sign";
+            }
+            setTran(targetaddr, asset, count, utxos) {
+                var assetid = wallet.tools.CoinTool.name2assetID[asset];
+                var utxoss = wallet.WalletFunction.getassets(utxos);
+                var _count = Neo.Fixed8.parse(count);
+                var tran = wallet.tools.CoinTool.makeTran(utxoss, targetaddr, assetid, _count);
+                let type = ThinNeo.TransactionType[tran.type].toString();
+                let version = tran.version.toString();
+                let inputcount = tran.inputs.length;
+                var inputAddrs = [];
+                let ul = document.createElement("ul");
+                ul.classList.add("list-group");
+                wallet.tools.BootsModule.setLiInUl(ul, "type:" + type);
+                wallet.tools.BootsModule.setLiInUl(ul, "version:" + version);
+                wallet.tools.BootsModule.setLiInUl(ul, "inputcount:" + inputcount);
+                for (var i = 0; i < tran.inputs.length; i++) {
+                    var _addr = tran.inputs[i]["_addr"];
+                    if (inputAddrs.indexOf(_addr) < 0) {
+                        inputAddrs.push(_addr);
+                    }
+                    //����clone��ת,���@��hash��input�ĳɆT��ֱ�ӷ��D����׃��
+                    var rhash = tran.inputs[i].hash.clone().reverse();
+                    var inputhash = rhash.toHexString();
+                    var outstr = "    input[" + i + "]" + inputhash + "(" + tran.inputs[i].index + ")";
+                    var txid = inputhash;
+                    wallet.tools.BootsModule.setLiInUl(ul, '<a class="code" href="http://be.nel.group/page/txInfo.html?txid=' + inputhash + '">' + outstr + '</a>');
+                }
+                for (var i = 0; i < tran.outputs.length; i++) {
+                    var addrt = tran.outputs[i].toAddress;
+                    var address = ThinNeo.Helper.GetAddressFromScriptHash(addrt);
+                    // a.target = "_blank";
+                    var outputs = "outputs[" + i + "]" + address;
+                    var assethash = tran.outputs[i].assetId.clone().reverse();
+                    var assetid = "0x" + assethash.toHexString();
+                    let a = document.createElement("a");
+                    a.innerText = outputs;
+                    a.href = 'http://be.nel.group/page/address.html?addr=' + address;
+                    a.target = "_blank";
+                    if (inputAddrs.length == 1 && address == inputAddrs[0]) {
+                        // lightsPanel.QuickDom.addSpan(this.panel, "    (change)" + CoinTool.assetID2name[assetid] + "=" + tran.outputs[i].value.toString());
+                        let addr = "(change)" + wallet.tools.CoinTool.assetID2name[assetid] + "=" + tran.outputs[i].value.toString();
+                        wallet.tools.BootsModule.setLiInUl(ul, a.outerHTML + addr);
+                    }
+                    else {
+                        // lightsPanel.QuickDom.addSpan(this.panel, "    " + CoinTool.assetID2name[assetid] + "=" + tran.outputs[i].value.toString());
+                        let addr = wallet.tools.CoinTool.assetID2name[assetid] + "=" + tran.outputs[i].value.toString();
+                        wallet.tools.BootsModule.setLiInUl(ul, a.outerHTML + addr);
+                    }
+                    // lightsPanel.QuickDom.addElement(this.panel, "br");
+                }
+                let msg = tran.GetMessage();
+                var msglen = msg.length;
+                var txid = tran.GetHash().toHexString();
+                wallet.tools.BootsModule.setLiInUl(ul, "--this TXLen=" + msglen + "--this TXID=" + txid);
+                for (var i = 0; i < inputAddrs.length; i++) {
+                    let must = "must witness[" + i + "]=" + inputAddrs[i];
+                    wallet.tools.BootsModule.setLiInUl(ul, must);
+                }
+                this.model.body.appendChild(ul);
+                $("#Transaction").modal("show");
+                this.model.send.onclick = () => {
+                    tran.witnesses = [];
+                    this.app.sign.setTran(tran, inputAddrs);
+                };
             }
         }
         module.TransactionModule = TransactionModule;
@@ -730,10 +932,42 @@ var wallet;
     (function (module) {
         class TransferModule {
             init(app) {
+                this.app = app;
                 let jum = wallet.tools.Jumbotron.creatJumbotron("Transfer");
                 this.module = jum.jumbotron;
                 this.body = jum.body;
                 app.main.appendChild(this.module);
+                let toaddr = wallet.tools.BootsModule.getFormGroup("To Address");
+                let toInput = document.createElement("input");
+                toInput.type = "text";
+                toInput.classList.add("form-control");
+                toInput.placeholder = "Enter the address you want to trade";
+                toaddr.appendChild(toInput);
+                let amount = wallet.tools.BootsModule.getFormGroup("Amount");
+                let amountInput = document.createElement("input");
+                amountInput.type = "number";
+                amountInput.classList.add("form-control");
+                amountInput.placeholder = "Enter the amount you want to trade ";
+                amount.appendChild(amountInput);
+                let type = wallet.tools.BootsModule.getFormGroup("Type");
+                let typeSelect = document.createElement("select");
+                let option = document.createElement("option");
+                option.value = "GAS";
+                option.innerText = "GAS";
+                type.appendChild(typeSelect);
+                typeSelect.appendChild(option);
+                let send = wallet.tools.BootsModule.getFormGroup("");
+                let btn = document.createElement("button");
+                btn.classList.add("btn", "btn-info");
+                btn.textContent = "Make transfer";
+                send.appendChild(btn);
+                this.body.appendChild(toaddr);
+                this.body.appendChild(amount);
+                this.body.appendChild(type);
+                this.body.appendChild(send);
+                btn.onclick = () => {
+                    this.app.transaction.setTran(toInput.value, typeSelect.value, amountInput.value, app.utxos);
+                };
             }
         }
         module.TransferModule = TransferModule;
@@ -939,6 +1173,80 @@ var wallet;
             }
         }
         tools.Jumbotron = Jumbotron;
+        class BootsModule {
+            static getFormGroup(title) {
+                let form = document.createElement("div");
+                form.classList.add("form-group");
+                if (title) {
+                    let label = document.createElement("label");
+                    label.textContent = title;
+                    label.classList.add("form-lable");
+                    form.appendChild(label);
+                }
+                return form;
+            }
+            static setLiInUl(ul, value) {
+                let li = document.createElement("li");
+                li.classList.add("list-group-item");
+                li.innerHTML = value;
+                ul.appendChild(li);
+            }
+        }
+        tools.BootsModule = BootsModule;
+        class Model {
+            constructor() {
+                this.head = document.createElement("h4");
+                this.model = document.createElement("div");
+                this.dialog = document.createElement("div");
+                this.content = document.createElement("div");
+                this.header = document.createElement("div");
+                this.body = document.createElement("div");
+                this.footer = document.createElement("div");
+                this.send = document.createElement("button");
+                this.close = document.createElement("button");
+                this.X = document.createElement("button");
+                this.model.classList.add("modal", "fade");
+                this.dialog.classList.add("modal-dialog");
+                this.content.classList.add("modal-content");
+                this.header.classList.add("modal-header");
+                this.footer.classList.add("modal-footer");
+                this.head.classList.add("modal-title");
+                this.X.classList.add("close");
+                this.X.innerHTML = "&times;";
+                this.close.innerText = "Close";
+                this.send.innerText = "Send";
+                this.X.setAttribute("data-dismiss", "modal");
+                this.X.setAttribute("aria-hidden", "true");
+                this.close.classList.add("btn", "btn-default");
+                this.close.setAttribute("data-dismiss", "modal");
+                this.send.classList.add("btn", "btn-primary");
+                this.model.appendChild(this.dialog);
+                this.model.tabIndex = -1;
+                this.dialog.appendChild(this.content);
+                this.content.appendChild(this.header);
+                this.content.appendChild(this.body);
+                this.content.appendChild(this.footer);
+                this.footer.appendChild(this.close);
+                this.footer.appendChild(this.send);
+                this.header.appendChild(this.X);
+            }
+            init(id, title, pater) {
+                this.title = title;
+                this.model.id = id;
+                this.head.innerText = this.title;
+                this.header.appendChild(this.head);
+                pater.appendChild(this.model);
+            }
+            set title(title) {
+                this._title = title;
+                this.head.textContent = this._title;
+                this.header.appendChild(this.head);
+            }
+            get title() {
+                return this._title;
+            }
+        }
+        tools.Model = Model;
     })(tools = wallet.tools || (wallet.tools = {}));
 })(wallet || (wallet = {}));
 var wallet;
@@ -1038,9 +1346,20 @@ var wallet;
                     return height;
                 });
             }
+            static rpc_getStorage(scripthash, key) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    var str = WWW.makeRpcUrl(WWW.rpc, "getstorage", scripthash.toHexString(), key.toHexString());
+                    var result = yield fetch(str, { "method": "get" });
+                    var json = yield result.json();
+                    if (json["result"] == null)
+                        return null;
+                    var r = json["result"];
+                    return r;
+                });
+            }
         }
         WWW.api = "http://47.96.168.8:81/api/testnet";
-        WWW.rpc = "";
+        WWW.rpc = "http://47.96.168.8:20332/";
         WWW.rpcName = "";
         tools.WWW = WWW;
     })(tools = wallet.tools || (wallet.tools = {}));

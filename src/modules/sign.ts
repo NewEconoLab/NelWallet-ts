@@ -1,14 +1,22 @@
 
 namespace wallet.module{
-    export class SignModule{
-        module:HTMLDivElement;
-        body:HTMLDivElement;
+    export class SignModule
+    {
+        app: App;
+        model: tools.Model;
         init(app: App)
         {
-            let jum = wallet.tools.Jumbotron.creatJumbotron("Sign");
-            this.module = jum.jumbotron;
-            this.body = jum.body;
-            app.main.appendChild(this.module);
+            this.app = app;
+            this.model = app.transaction.model;
+        }
+        public setTran(tran: ThinNeo.Transaction, inputaddr: string[])
+        {
+            if (tran.witnesses == null)
+                tran.witnesses = [];
+            let txid = tran.GetHash().clone().reverse().toHexString();
+
+            this.model.title = "Sign";
+            this.model.body.innerHTML = "";
         }
     }
 }
