@@ -3,7 +3,10 @@ namespace wallet{
 
     export class WalletFunction{
 
-        public app:App;
+        public app: App;
+        public init(app: App) {
+            this.app = app;
+        }
         public getassets(utxos:wallet.entity.UTXO[]):{[id:string]:wallet.entity.UTXO[]}{
     
             var assets = {};
@@ -58,7 +61,9 @@ namespace wallet{
         /**
          * utxo
          */
-        public async utxo(address:string) {
+        public async utxo(address: string) {
+            this.app.utxo.module.hidden =this.app.utxo.module.hidden == true ? false : true;
+
             try {
                 let allAsset: entity.Asset[] = await tools.WWW.api_getAllAssets();
                 allAsset.map((asset)=>{

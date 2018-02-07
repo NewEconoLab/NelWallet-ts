@@ -4,8 +4,10 @@ namespace wallet.module{
     export class DetailModule{
         module:HTMLDivElement;
         body:HTMLDivElement;
-        btn:HTMLButtonElement;
-        init(app:App){
+        btn: HTMLButtonElement;
+        app: App;
+        init(app: App) {
+            this.app = app;
             let jum = wallet.tools.Jumbotron.creatJumbotron("Details");
             this.module = jum.jumbotron;
             this.body = jum.body;
@@ -13,6 +15,11 @@ namespace wallet.module{
             this.btn.classList.add("btn","btn-link");
             this.btn.innerText="UTXO";
             app.main.appendChild(this.module);
+
+            this.btn.onclick = () => {
+                this.app.walletFunction.utxo(this.app.loadKey.address);
+            }
+            
         }
         update(detail: wallet.entity.Detail)
         {

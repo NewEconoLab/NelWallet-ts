@@ -22,6 +22,8 @@ var wallet;
             this.transfer = new wallet.module.TransferModule();
             this.transaction = new wallet.module.TransactionModule();
             this.walletController = new wallet.WalletController();
+            this.walletFunction = new wallet.WalletFunction();
+            this.utxo = new wallet.module.UtxosModule();
             this.navbar = new wallet.module.NavbarModule();
         }
         start() {
@@ -30,9 +32,11 @@ var wallet;
                 this.detail.init(this);
                 this.navbar.init(this);
                 this.sign.init(this);
+                this.utxo.init(this);
                 this.transfer.init(this);
                 this.transaction.init(this);
                 this.walletController.start(this);
+                this.walletFunction.init(this);
             });
         }
     }
@@ -67,6 +71,9 @@ var wallet;
         entity.Nep5as = Nep5as;
         class loadKey {
             constructor(pubkey, prikey, address) {
+                this.prikey = prikey;
+                this.pubkey = pubkey;
+                this.address = address;
             }
         }
         entity.loadKey = loadKey;
@@ -273,11 +280,6 @@ var wallet;
         /**
          * showUtxo
          */
-        showUtxo() {
-            this.app.detail.btn.onclick = () => {
-                // this.app.walletFunction.utxo(this)
-            };
-        }
         /**
          * importWif
          */
@@ -285,7 +287,7 @@ var wallet;
             $("#import-wif").click(() => {
                 $("#importWif").modal('show');
             });
-            $('#send-wif').click(() => {
+            $('#send-wif').click(() => __awaiter(this, void 0, void 0, function* () {
                 let wif = $("#wif-input").find("input").val().toString(); //获得输入的wif
                 let res;
                 if (!wif.length) {
@@ -296,7 +298,9 @@ var wallet;
                         let result = wallet.tools.NeoUtil.wifDecode(wif);
                         if (!result.err) {
                             this.loadKeys = [result.result];
-                            this.details(result.result['address']);
+                            this.app.loadKey = result.result;
+                            yield this.details(result.result['address']);
+                            yield $("#importWif").modal('hide');
                         }
                         res = { err: false, result: "验证通过" };
                     }
@@ -306,7 +310,7 @@ var wallet;
                     }
                 }
                 //walletView.verifWif(res);
-            });
+            }));
         }
         /**
          * importNep2
@@ -447,10 +451,6 @@ var wallet;
                         utxos.map((item) => {
                             item.name = allAsset.find(val => val.id == item.asset).name.map((name) => { return name.name; }).join("|");
                         });
-                        //walletView.showUtxo(utxos);
-                        $("#wallet-details").show();
-                        $("#wallet-utxo").show();
-                        $("#wallet-transaction").show();
                     }
                     catch (error) {
                     }
@@ -468,10 +468,10 @@ var wallet;
                 let password = $("#nep2-password").val().toString();
                 try {
                     let res = yield wallet.tools.NeoUtil.nep2ToWif(nep2, password);
-                    console.log(res);
                     if (!res.err) {
                         $("#importNep2").modal('hide');
                         $("#wallet-details").empty();
+                        this.app.loadKey = res.result;
                         this.details(res.result["address"]);
                     }
                 }
@@ -495,6 +495,9 @@ var wallet;
 ///<reference path="../app.ts"/>
 (function (wallet) {
     class WalletFunction {
+        init(app) {
+            this.app = app;
+        }
         getassets(utxos) {
             var assets = {};
             for (var i in utxos) {
@@ -545,6 +548,7 @@ var wallet;
          */
         utxo(address) {
             return __awaiter(this, void 0, void 0, function* () {
+                this.app.utxo.module.hidden = this.app.utxo.module.hidden == true ? false : true;
                 try {
                     let allAsset = yield wallet.tools.WWW.api_getAllAssets();
                     allAsset.map((asset) => {
@@ -574,6 +578,7 @@ var wallet;
     (function (module) {
         class DetailModule {
             init(app) {
+                this.app = app;
                 let jum = wallet.tools.Jumbotron.creatJumbotron("Details");
                 this.module = jum.jumbotron;
                 this.body = jum.body;
@@ -581,6 +586,9 @@ var wallet;
                 this.btn.classList.add("btn", "btn-link");
                 this.btn.innerText = "UTXO";
                 app.main.appendChild(this.module);
+                this.btn.onclick = () => {
+                    this.app.walletFunction.utxo(this.app.loadKey.address);
+                };
             }
             update(detail) {
                 this.module.hidden = false;
@@ -733,14 +741,31 @@ var wallet;
     (function (module) {
         class UtxosModule {
             init(app) {
+                this.app = app;
                 let jum = wallet.tools.Jumbotron.creatJumbotron("UTXO");
                 this.module = jum.jumbotron;
                 this.body = jum.body;
-                app.main.appendChild(this.module);
             }
             update(utxos) {
-                // this.module.hidden=false;
                 this.body.innerHTML = "";
+                let table = new wallet.tools.Table();
+                table.table.classList.add("table", "table-hover", "cool");
+                table.init(this.body);
+                utxos.forEach((utxo) => {
+                    let th = document.createElement('tr');
+                    let td1 = document.createElement('td');
+                    let td2 = document.createElement('td');
+                    let td3 = document.createElement('td');
+                    th.appendChild(td1);
+                    th.appendChild(td2);
+                    th.appendChild(td3);
+                    td1.innerText = utxo.name;
+                    td2.innerText = utxo.value.toString();
+                    td3.innerHTML = "<a class='code' target='_blank' rel='external nofollow' href='./txInfo.html?txid=" + utxo.txid + "'>"
+                        + utxo.txid + "</a>[" + utxo.n + "]";
+                    table.tbody.appendChild(th);
+                });
+                this.app.detail.body.appendChild(this.module);
             }
         }
         module.UtxosModule = UtxosModule;

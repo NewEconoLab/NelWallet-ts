@@ -11,13 +11,7 @@ namespace wallet
         /**
          * showUtxo
          */
-        public showUtxo()
-        {
-            this.app.detail.btn.onclick = () =>
-            {
-                this.app.walletFunction.utxo(this.app.loadKey.address);
-            }
-        }
+
 
 
 
@@ -30,7 +24,7 @@ namespace wallet
             {
                 $("#importWif").modal('show');
             });
-            $('#send-wif').click(() =>
+            $('#send-wif').click(async() =>
             {
                 let wif: string = $("#wif-input").find("input").val().toString();  //获得输入的wif
                 let res: wallet.entity.result;
@@ -45,7 +39,9 @@ namespace wallet
                         if (!result.err)
                         {
                             this.loadKeys = [result.result];
-                            this.details(result.result['address']);
+                            this.app.loadKey = result.result;
+                            await this.details(result.result['address']);
+                            await $("#importWif").modal('hide');
                         }
                         res = { err: false, result: "验证通过" }
                     } catch (error)
@@ -236,10 +232,6 @@ namespace wallet
                     {
                         item.name = allAsset.find(val => val.id == item.asset).name.map((name) => { return name.name }).join("|");
                     })
-                    //walletView.showUtxo(utxos);
-                    $("#wallet-details").show();
-                    $("#wallet-utxo").show();
-                    $("#wallet-transaction").show();
                 } catch (error)
                 {
 
@@ -261,11 +253,11 @@ namespace wallet
             try
             {
                 let res: wallet.entity.result = await wallet.tools.NeoUtil.nep2ToWif(nep2, password);
-                console.log(res);
                 if (!res.err)
                 {
                     $("#importNep2").modal('hide');
                     $("#wallet-details").empty();
+                    this.app.loadKey = res.result;
                     this.details(res.result["address"]);
                 }
             } catch (err)

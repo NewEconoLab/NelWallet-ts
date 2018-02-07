@@ -24,6 +24,8 @@ namespace wallet
             this.transfer = new module.TransferModule();
             this.transaction = new module.TransactionModule();
             this.walletController = new WalletController();
+            this.walletFunction = new WalletFunction();
+            this.utxo = new module.UtxosModule();
             this.navbar = new module.NavbarModule();
         }
         async start()
@@ -36,11 +38,15 @@ namespace wallet
 
             this.sign.init(this);
 
+            this.utxo.init(this);
+
             this.transfer.init(this);
 
             this.transaction.init(this);
 
             this.walletController.start(this);
+
+            this.walletFunction.init(this);
         }
     }
 
