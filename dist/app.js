@@ -226,6 +226,8 @@ var wallet;
                         // getkey = async (keyindex: number) => {
                         for (let keyindex = 0; keyindex < wallet.accounts.length; keyindex++) {
                             let account = wallet.accounts[keyindex];
+                            if (account.nep2key == null)
+                                continue;
                             try {
                                 let result = yield NeoUtil.getPriKeyfromAccount(wallet.scrypt, password, account);
                                 res.push(result.result);

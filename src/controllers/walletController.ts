@@ -24,7 +24,7 @@ namespace wallet
             {
                 $("#importWif").modal('show');
             });
-            $('#send-wif').click(async() =>
+            $('#send-wif').click(async () =>
             {
                 let wif: string = $("#wif-input").find("input").val().toString();  //获得输入的wif
                 let res: wallet.entity.result;
@@ -115,7 +115,7 @@ namespace wallet
                     if (res.result.length > 1)
                     {
                         let addrs: string[] =
-                            res.result.map(item =>
+                            res.result.map((item) =>
                             {
                                 return item["address"]
                             });
