@@ -33,7 +33,7 @@ namespace wallet.tools
             }
             let addrpanel = new wallet.tools.Panel();
             addrpanel.setTitle("Address");
-            addrpanel.setBody(detail.address);
+            addrpanel.setBodyStr(detail.address);
             addrpanel.init(detailview);
             let balanPanel = new wallet.tools.Panel();
             balanPanel.setTitle("Balance");

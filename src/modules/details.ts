@@ -36,7 +36,7 @@ namespace wallet.module{
             let div1=document.createElement("div");
             let div2=document.createElement("div");
             addrpanel.setTitle("Address");
-            addrpanel.setBody(detail.address);
+            addrpanel.setBodyStr(detail.address);
             addrpanel.init(div1);
             div1.classList.add("col-lg-6");
             let balanPanel = new wallet.tools.Panel();

@@ -5,6 +5,7 @@ namespace wallet.module{
         model: tools.Model;
         app: App;
         assets: { [id: string]: entity.UTXO[] }
+        tran: ThinNeo.Transaction;
         init(app: App)
         {
             this.app = app;
@@ -13,15 +14,10 @@ namespace wallet.module{
             this.model.send.innerText = "Sign";
         }
 
-        public setTran(targetaddr: string, asset: string, count: string, utxos: entity.UTXO[])
+        public setTran(tran: ThinNeo.Transaction)
         {
-            var assetid = wallet.tools.CoinTool.name2assetID[asset];
-            var utxoss: {
-                [id: string]: wallet.entity.UTXO[]
-            } = WalletFunction.getassets(utxos);
-            this.assets = utxoss;
-            var _count = Neo.Fixed8.parse(count);
-            var tran = wallet.tools.CoinTool.makeTran(utxoss, targetaddr, assetid, _count)
+            this.model.body.innerHTML = "";
+            this.tran = tran;
             let type: string = ThinNeo.TransactionType[tran.type].toString();
             let version: string = tran.version.toString();
             let inputcount = tran.inputs.length;

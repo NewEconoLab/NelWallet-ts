@@ -44,7 +44,13 @@ namespace wallet.module{
 
             btn.onclick = () =>
             {
-                this.app.transaction.setTran(toInput.value, typeSelect.value, amountInput.value, app.utxos);
+                var assetid = wallet.tools.CoinTool.name2assetID[typeSelect.value];
+                var utxoss: {
+                    [id: string]: wallet.entity.UTXO[]
+                } = WalletFunction.getassets(app.utxos);
+                var _count = Neo.Fixed8.parse(amountInput.value);
+                var tran = wallet.tools.CoinTool.makeTran(utxoss, toInput.value, assetid, _count)
+                this.app.transaction.setTran(tran);
             }
 
         }

@@ -651,6 +651,14 @@ var wallet;
                 this.setName.innerText = "SetName";
                 this.getNamePanel = new wallet.tools.Panel();
                 this.getNamePanel.title.appendChild(this.getName);
+                this.setNamePanel = new wallet.tools.Panel();
+                this.setNamePanel.title.appendChild(this.setName);
+                this.input = wallet.tools.BootsModule.createInput("text", "form-control", "Please enter the name you want to create ");
+                this.setNamePanel.setBody(this.input);
+                this.setCol = wallet.tools.BootsModule.creatCol(6);
+                this.getCol = wallet.tools.BootsModule.creatCol(6);
+                this.setCol.appendChild(this.setNamePanel.palneDiv);
+                this.getCol.appendChild(this.getNamePanel.palneDiv);
                 this.app.main.appendChild(this.module);
             }
             initDApp_WhoAmI() {
@@ -658,7 +666,6 @@ var wallet;
                 console.log("(No need key)");
                 console.log("Target");
                 var target = this.app.loadKey.address;
-                this.body.appendChild(this.getNamePanel.palneDiv);
                 this.getName.onclick = () => __awaiter(this, void 0, void 0, function* () {
                     //dapp 方式1 ，GetStorage  ，方式2 invokeScript，查NEP5余额就是
                     var targetaddr = target;
@@ -667,41 +674,41 @@ var wallet;
                     var script = scriptaddress.hexToBytes(); //script 要反序
                     var r = yield wallet.tools.WWW.rpc_getStorage(script, key);
                     if (r == null) {
-                        this.getNamePanel.setBody("no name");
+                        this.getNamePanel.setBodyStr("no name");
                     }
                     else {
                         var hex = r.hexToBytes();
-                        this.getNamePanel.setBody("name=" + ThinNeo.Helper.Bytes2String(hex));
+                        this.getNamePanel.setBodyStr("name：" + ThinNeo.Helper.Bytes2String(hex));
                     }
                 });
                 if (pkey != null) {
+                    this.row = wallet.tools.BootsModule.creatRow(this.getCol, this.setCol);
+                    this.body.appendChild(this.row);
                     var pkeyhash = ThinNeo.Helper.GetPublicKeyScriptHashFromPublicKey(pkey);
                     console.log("(need key)");
                     console.log("cur addr=" + this.app.loadKey.address);
                     console.log("setName");
                     this.setName.onclick = () => {
+                        let targeraddr = this.app.loadKey.address; //给自己转账
+                        let assetid = wallet.tools.CoinTool.id_GAS;
+                        //let _count = Neo.Fixed8.Zero;   //十个gas内都不要钱滴
+                        var _count = Neo.Fixed8.parse("1");
+                        let tran = wallet.tools.CoinTool.makeTran(this.app.walletController.getassets(this.app.utxos), targeraddr, assetid, Neo.Fixed8.Zero);
+                        tran.type = ThinNeo.TransactionType.InvocationTransaction;
+                        tran.extdata = new ThinNeo.InvokeTransData();
+                        let script = null;
+                        var sb = new ThinNeo.ScriptBuilder();
+                        var scriptaddress = "0x42832a25cf11d0ceee5629cb8b4daee9bac207ca".hexToBytes().reverse();
+                        sb.EmitPushString(this.input.value); //先推第二个参数，新名字
+                        sb.EmitPushBytes(this.app.loadKey.pubkey); //再推第二个参数，自己的公钥
+                        sb.EmitAppCall(scriptaddress);
+                        tran.extdata.script = sb.ToArray();
+                        //估计一个gas用量
+                        //如果估计gas用量少了，智能合约执行会失败。
+                        //如果估计gas用量>10,交易必须丢弃gas，否则智能合约执行会失败
+                        tran.extdata.gas = Neo.Fixed8.fromNumber(1.0);
+                        this.app.transaction.setTran(tran);
                     };
-                    //btnSetName.onclick = () =>
-                    //{
-                    //    var targetaddr = this.app.panelLoadKey.address;//给自己转账
-                    //    var assetid = CoinTool.id_GAS;
-                    //    var _count = Neo.Fixed8.Zero;//有数就行，是个gas以内都是不要钱的
-                    //    var tran = CoinTool.makeTran(this.main.panelUTXO.assets, targetaddr, assetid, _count);
-                    //    tran.type = ThinNeo.TransactionType.InvocationTransaction;
-                    //    tran.extdata = new ThinNeo.InvokeTransData();
-                    //    let script = null;
-                    //    var sb = new ThinNeo.ScriptBuilder();
-                    //    var scriptaddress = "0x42832a25cf11d0ceee5629cb8b4daee9bac207ca".hexToBytes().reverse();
-                    //    sb.EmitPushString(inputName.value);//先推第二个参数，新名字
-                    //    sb.EmitPushBytes(this.main.panelLoadKey.pubkey);//再推第二个参数，自己的公钥
-                    //    sb.EmitAppCall(scriptaddress);
-                    //    (tran.extdata as ThinNeo.InvokeTransData).script = sb.ToArray();
-                    //    //估计一个gas用量
-                    //    //如果估计gas用量少了，智能合约执行会失败。
-                    //    //如果估计gas用量>10,交易必须丢弃gas，否则智能合约执行会失败
-                    //    (tran.extdata as ThinNeo.InvokeTransData).gas = Neo.Fixed8.fromNumber(1.0);
-                    //    this.main.panelTransaction.setTran(tran);
-                    //};
                 }
             }
         }
@@ -740,7 +747,7 @@ var wallet;
                 let div1 = document.createElement("div");
                 let div2 = document.createElement("div");
                 addrpanel.setTitle("Address");
-                addrpanel.setBody(detail.address);
+                addrpanel.setBodyStr(detail.address);
                 addrpanel.init(div1);
                 div1.classList.add("col-lg-6");
                 let balanPanel = new wallet.tools.Panel();
@@ -834,14 +841,66 @@ var wallet;
         class SignModule {
             init(app) {
                 this.app = app;
-                this.model = app.transaction.model;
             }
             setTran(tran, inputaddr) {
-                if (tran.witnesses == null)
-                    tran.witnesses = [];
-                let txid = tran.GetHash().clone().reverse().toHexString();
+                this.model = this.app.transaction.model;
                 this.model.title = "Sign";
                 this.model.body.innerHTML = "";
+                this.model.send.innerText = "boardcast it.";
+                if (tran.witnesses == null)
+                    tran.witnesses = [];
+                let ul = document.createElement("ul");
+                ul.classList.add("list-group");
+                let txid = tran.GetHash().clone().reverse().toHexString();
+                wallet.tools.BootsModule.setLiInUl(ul, "txid:" + txid);
+                let a = wallet.tools.BootsModule.creatA("TXID:" + txid, "http://be.nel.group/page/txInfo.html?txid=" + txid);
+                wallet.tools.BootsModule.setLiInUl(ul, a.outerHTML);
+                a.target = "_blank";
+                wallet.tools.BootsModule.setLiInUl(ul, "need witness:");
+                for (var i = 0; i < inputaddr.length; i++) {
+                    wallet.tools.BootsModule.setLiInUl(ul, "Withess[" + i + "]:" + inputaddr[i]);
+                    var hadwit = false;
+                    for (var w = 0; w < tran.witnesses.length; w++) {
+                        if (tran.witnesses[w].Address == inputaddr[i]) {
+                            //m
+                            wallet.tools.BootsModule.setLiInUl(ul, "V_script:" + tran.witnesses[w].VerificationScript.toHexString());
+                            wallet.tools.BootsModule.setLiInUl(ul, "I_script:" + tran.witnesses[w].InvocationScript.toHexString());
+                            let witi = w;
+                            let del = wallet.tools.BootsModule.createBtn("delete witness", "btn-info");
+                            this.model.body.appendChild(ul);
+                            this.model.body.appendChild(del);
+                            del.onclick = () => {
+                                tran.witnesses.splice(witi, 1);
+                                this.setTran(tran, inputaddr);
+                                return;
+                            };
+                            hadwit = true;
+                            break;
+                        }
+                    }
+                    if (hadwit == false) {
+                        wallet.tools.BootsModule.setLiInUl(ul, "NoWitness");
+                        if (inputaddr[i] == this.app.loadKey.address) {
+                            var add = wallet.tools.BootsModule.createBtn("Add witness by current key", "btn-info");
+                            this.model.body.appendChild(ul);
+                            this.model.body.appendChild(add);
+                            add.onclick = () => {
+                                var msg = tran.GetMessage();
+                                var pubkey = this.app.loadKey.pubkey;
+                                var signdata = ThinNeo.Helper.Sign(msg, this.app.loadKey.prikey);
+                                tran.AddWitness(signdata, pubkey, this.app.loadKey.address);
+                                this.setTran(tran, inputaddr);
+                            };
+                        }
+                    }
+                    this.model.send.onclick = () => __awaiter(this, void 0, void 0, function* () {
+                        var result = yield wallet.tools.WWW.rpc_postRawTransaction(tran.GetRawData());
+                        if (result == true) {
+                            alert("txid=" + txid);
+                        }
+                        $("#Transaction").modal("hide");
+                    });
+                }
             }
         }
         module.SignModule = SignModule;
@@ -858,11 +917,9 @@ var wallet;
                 this.model.init("Transaction", "Transaction", document.body);
                 this.model.send.innerText = "Sign";
             }
-            setTran(targetaddr, asset, count, utxos) {
-                var assetid = wallet.tools.CoinTool.name2assetID[asset];
-                var utxoss = wallet.WalletFunction.getassets(utxos);
-                var _count = Neo.Fixed8.parse(count);
-                var tran = wallet.tools.CoinTool.makeTran(utxoss, targetaddr, assetid, _count);
+            setTran(tran) {
+                this.model.body.innerHTML = "";
+                this.tran = tran;
                 let type = ThinNeo.TransactionType[tran.type].toString();
                 let version = tran.version.toString();
                 let inputcount = tran.inputs.length;
@@ -966,7 +1023,11 @@ var wallet;
                 this.body.appendChild(type);
                 this.body.appendChild(send);
                 btn.onclick = () => {
-                    this.app.transaction.setTran(toInput.value, typeSelect.value, amountInput.value, app.utxos);
+                    var assetid = wallet.tools.CoinTool.name2assetID[typeSelect.value];
+                    var utxoss = wallet.WalletFunction.getassets(app.utxos);
+                    var _count = Neo.Fixed8.parse(amountInput.value);
+                    var tran = wallet.tools.CoinTool.makeTran(utxoss, toInput.value, assetid, _count);
+                    this.app.transaction.setTran(tran);
                 };
             }
         }
@@ -1045,8 +1106,8 @@ var wallet;
                 });
             }
             static makeTran(utxos, targetaddr, assetid, sendcount) {
-                if (sendcount.compareTo(Neo.Fixed8.Zero) <= 0)
-                    throw new Error("can not send zero.");
+                //if (sendcount.compareTo(Neo.Fixed8.Zero) <= 0)
+                //    throw new Error("can not send zero.");
                 var tran = new ThinNeo.Transaction();
                 tran.type = ThinNeo.TransactionType.ContractTransaction;
                 tran.version = 0; //0 or 1
@@ -1074,11 +1135,13 @@ var wallet;
                 if (count.compareTo(sendcount) >= 0) {
                     tran.outputs = [];
                     //输出
-                    var output = new ThinNeo.TransactionOutput();
-                    output.assetId = assetid.hexToBytes().reverse();
-                    output.value = sendcount;
-                    output.toAddress = ThinNeo.Helper.GetPublicKeyScriptHash_FromAddress(targetaddr);
-                    tran.outputs.push(output);
+                    if (sendcount.compareTo(Neo.Fixed8.Zero) > 0) {
+                        var output = new ThinNeo.TransactionOutput();
+                        output.assetId = assetid.hexToBytes().reverse();
+                        output.value = sendcount;
+                        output.toAddress = ThinNeo.Helper.GetPublicKeyScriptHash_FromAddress(targetaddr);
+                        tran.outputs.push(output);
+                    }
                     //找零
                     var change = count.subtract(sendcount);
                     if (change.compareTo(Neo.Fixed8.Zero) > 0) {
@@ -1127,8 +1190,15 @@ var wallet;
                 this.title.innerHTML = title;
             }
             setBody(body) {
-                this.body.innerHTML = body;
+                this.body.appendChild(body);
                 this.palneDiv.appendChild(this.body);
+            }
+            setBodyStr(str) {
+                this.body.innerHTML = str;
+                this.palneDiv.appendChild(this.body);
+            }
+            setClass(...param) {
+                //this.palneDiv.classList.add(param);
             }
             /**
              * setUl
@@ -1187,9 +1257,41 @@ var wallet;
             }
             static setLiInUl(ul, value) {
                 let li = document.createElement("li");
-                li.classList.add("list-group-item");
+                li.classList.add("list-group-item", "code");
                 li.innerHTML = value;
                 ul.appendChild(li);
+            }
+            static creatRow(...param) {
+                let row = document.createElement("div");
+                row.className = "row";
+                for (let i = 0; i < param.length; i++) {
+                    row.appendChild(param[i]);
+                }
+                return row;
+            }
+            static creatCol(size) {
+                let col = document.createElement("div");
+                col.classList.add("col-md-" + size);
+                return col;
+            }
+            static createInput(type, cname, placeholder) {
+                let input = document.createElement("input");
+                input.type = type;
+                input.className = cname;
+                input.placeholder = placeholder;
+                return input;
+            }
+            static createBtn(value, style) {
+                let btn = document.createElement("button");
+                btn.innerHTML = value;
+                btn.classList.add("btn", style);
+                return btn;
+            }
+            static creatA(val, href) {
+                let a = document.createElement("a");
+                a.innerHTML = val;
+                a.href = href;
+                return a;
             }
         }
         tools.BootsModule = BootsModule;
@@ -1393,7 +1495,7 @@ var wallet;
                 }
                 let addrpanel = new wallet.tools.Panel();
                 addrpanel.setTitle("Address");
-                addrpanel.setBody(detail.address);
+                addrpanel.setBodyStr(detail.address);
                 addrpanel.init(detailview);
                 let balanPanel = new wallet.tools.Panel();
                 balanPanel.setTitle("Balance");

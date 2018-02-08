@@ -27,12 +27,21 @@ namespace wallet.tools{
         public setTitle(title:string) {
             this.title.innerHTML=title;
         }
-    
-        public setBody(body:string){
-            this.body.innerHTML=body;
+
+        public setBody(body: HTMLElement)
+        {
+            this.body.appendChild(body);
             this.palneDiv.appendChild(this.body);
         }
-    
+        public setBodyStr(str: string)
+        {
+            this.body.innerHTML = str;
+            this.palneDiv.appendChild(this.body);
+        }
+
+        public setClass(...param: string[]) {
+            //this.palneDiv.classList.add(param);
+        }
         /**
          * setUl
          */
@@ -101,9 +110,47 @@ namespace wallet.tools{
         static setLiInUl(ul: HTMLUListElement, value: string)
         {
             let li = document.createElement("li");
-            li.classList.add("list-group-item");
+            li.classList.add("list-group-item","code");
             li.innerHTML = value;
             ul.appendChild(li);
+        }
+        static creatRow(...param: HTMLDivElement[]): HTMLDivElement
+        {
+            let row = document.createElement("div");
+            row.className = "row";
+            for (let i = 0; i < param.length; i++)
+            {
+                row.appendChild(param[i] as HTMLDivElement);
+            }
+            return row;
+        }
+        static creatCol(size: number): HTMLDivElement
+        {
+            let col = document.createElement("div");
+            col.classList.add("col-md-" + size);
+            return col
+        }
+        static createInput(type: string, cname: string, placeholder: string): HTMLInputElement
+        {
+            let input = document.createElement("input");
+            input.type = type;
+            input.className = cname;
+            input.placeholder = placeholder;
+            return input;
+        }
+        static createBtn(value: string, style: string): HTMLButtonElement
+        {
+            let btn = document.createElement("button");
+            btn.innerHTML = value;
+            btn.classList.add("btn", style);
+            return btn;
+        }
+        static creatA(val: string, href: string): HTMLAnchorElement
+        {
+            let a = document.createElement("a");
+            a.innerHTML = val;
+            a.href = href;
+            return a;
         }
     }
 
