@@ -15,6 +15,7 @@ namespace wallet
         transaction: module.TransactionModule;
         utxoModule: module.UtxosModule;
         dapp: module.Dapp;
+        nep5: module.Nep5;
         loadKey: entity.loadKey;
         utxos: entity.UTXO[];
         main: HTMLDivElement;
@@ -30,6 +31,7 @@ namespace wallet
             this.utxoModule = new module.UtxosModule();
             this.navbar = new module.NavbarModule();
             this.dapp = new module.Dapp();
+            this.nep5 = new module.Nep5();
         }
         async start()
         {
@@ -48,6 +50,8 @@ namespace wallet
             this.transaction.init(this);
 
             this.dapp.init(this);
+
+            this.nep5.init(this);
 
             this.walletController.start(this);
 

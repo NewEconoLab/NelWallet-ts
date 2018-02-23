@@ -51,11 +51,11 @@ namespace wallet.module
             if (str == "Nep5")
             {
                 this.liNep5.classList.add("active");
-                // this.app.sign.module.hidden=false;
+                this.app.nep5.module.hidden = false;
             } else
             {
                 this.liNep5.classList.remove("active");
-                // this.app.sign.module.hidden=true;
+                this.app.nep5.module.hidden = true;
             }
             if (str == "transfer")
             {
