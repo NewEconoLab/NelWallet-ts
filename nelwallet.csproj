@@ -109,6 +109,7 @@
     <TypeScriptCompile Include="src\modules\utxos.ts" />
     <TypeScriptCompile Include="src\tools\cointool.ts" />
     <TypeScriptCompile Include="src\tools\neotool.ts" />
+    <TypeScriptCompile Include="src\tools\nep5tool.ts" />
     <TypeScriptCompile Include="src\tools\viewtool.ts" />
     <TypeScriptCompile Include="src\tools\wwwtool.ts" />
     <TypeScriptCompile Include="src\views\walletView.ts" />

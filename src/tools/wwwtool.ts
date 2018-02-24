@@ -101,6 +101,7 @@
             var height = parseInt(r as string) - 1;
             return height;
         }
+
         static async  rpc_getStorage(scripthash: Uint8Array, key: Uint8Array): Promise<string>
         {
             var str = WWW.makeRpcUrl(WWW.rpc, "getstorage", scripthash.toHexString(), key.toHexString());
@@ -109,6 +110,17 @@
             if (json["result"] == null)
                 return null;
             var r = json["result"] as string;
+            return r;
+        }
+
+        static async rpc_getInvokescript(scripthash: Uint8Array): Promise<any>
+        {
+            var str = WWW.makeRpcUrl(WWW.rpc, "invokescript", scripthash.toHexString());
+            var result = await fetch(str, { "method": "get" });
+            var json = await result.json();
+            if (json["result"] == null)
+                return null;
+            var r = json["result"]
             return r;
         }
     }

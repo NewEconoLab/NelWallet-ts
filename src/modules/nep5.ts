@@ -28,10 +28,14 @@
             let type = tools.BootsModule.getFormGroup("Type");
             let typeSelect = document.createElement("select");
             let option = document.createElement("option");
-            option.value = "GAS";
-            option.innerText = "GAS";
+            option.value = "0x3fccdb91c9bb66ef2446010796feb6ca4ed96b05";
+            option.innerText = "NNS Coin";
+            let option2 = document.createElement("option");
+            option2.value = "c88acaae8a0362cdbdedddf0083c452a3a8bb7b8";
+            option2.innerText = "CPX Token";
             type.appendChild(typeSelect);
             typeSelect.appendChild(option);
+            typeSelect.appendChild(option2);
             let send = tools.BootsModule.getFormGroup("");
             let btn = document.createElement("button");
             btn.classList.add("btn", "btn-info");
@@ -46,18 +50,29 @@
 
             btn.onclick = () =>
             {
-                this.initDApp_WhoAmI("AHDV7M54NHukq8f76QQtBTbrCqKJrBH9UF", "9");
+
+                this.initDApp_WhoAmI(toInput.value, amountInput.value, typeSelect.value);
 
             }
 
         }
 
 
-        initDApp_WhoAmI(to: string, value: string): void
+        async initDApp_WhoAmI(to: string, value: string, type: string)
         {
             var pkey = this.app.loadKey.pubkey;
             var target = this.app.loadKey.address;
+            var res = await tools.Nep5.getInfoByContract(type);
+            var decimals = res["decimals"];
+            var bnum = Neo.BigInteger.parse(value);
 
+            var v = 1;
+            for (var i = 0; i < decimals; i++)
+            {
+                v *= 10;
+            }
+            var intv = bnum.multiply(v).toInt32();
+            
             if (pkey != null)
             {
                 var pkeyhash = ThinNeo.Helper.GetPublicKeyScriptHashFromPublicKey(pkey);
@@ -70,8 +85,8 @@
                 tran.extdata = new ThinNeo.InvokeTransData();
                 let script = null;
                 var sb = new ThinNeo.ScriptBuilder();
-                var scriptaddress = "c88acaae8a0362cdbdedddf0083c452a3a8bb7b8".hexToBytes().reverse();
-                sb.EmitParamJson(["(address)" + this.app.loadKey.address, "(address)" + to, "(integer)" + value]);//第二个参数是个数组
+                var scriptaddress = type.hexToBytes().reverse();
+                sb.EmitParamJson(["(address)" + this.app.loadKey.address, "(address)" + to, "(integer)" + intv]);//第二个参数是个数组
                 sb.EmitPushString("transfer");//第一个参数
                 sb.EmitAppCall(scriptaddress);  //资产合约
                 (tran.extdata as ThinNeo.InvokeTransData).script = sb.ToArray();

@@ -581,57 +581,6 @@ var wallet;
                 }
             });
         }
-        initDApp_WhoAmI() {
-            var pkey = this.app.loadKey.pubkey;
-            console.log("(No need key)");
-            console.log("Target");
-            var target = "AdzQq1DmnHq86yyDUkU3jKdHwLUe2MLAVv";
-            let btn = document.createElement("button");
-            btn.innerText = "test";
-            this.app.main.appendChild(btn);
-            btn.onclick = () => __awaiter(this, void 0, void 0, function* () {
-                //dapp ��ʽ1 ��GetStorage  ����ʽ2 invokeScript����NEP5������
-                var targetaddr = target;
-                var scriptaddress = "0x42832a25cf11d0ceee5629cb8b4daee9bac207ca";
-                var key = ThinNeo.Helper.GetPublicKeyScriptHash_FromAddress(targetaddr);
-                var script = scriptaddress.hexToBytes(); //script Ҫ����
-                var r = yield wallet.tools.WWW.rpc_getStorage(script, key);
-                if (r == null) {
-                    alert("no name");
-                }
-                else {
-                    var hex = r.hexToBytes();
-                    alert("name=" + ThinNeo.Helper.Bytes2String(hex));
-                }
-            });
-            if (pkey != null) {
-                var pkeyhash = ThinNeo.Helper.GetPublicKeyScriptHashFromPublicKey(pkey);
-                console.log("(need key)");
-                console.log("cur addr=" + this.app.loadKey.address);
-                console.log("setName");
-                //btnSetName.onclick = () =>
-                //{
-                //    var targetaddr = this.app.panelLoadKey.address;//���Լ�ת��
-                //    var assetid = CoinTool.id_GAS;
-                //    var _count = Neo.Fixed8.Zero;//�������У��Ǹ�gas���ڶ��ǲ�ҪǮ��
-                //    var tran = CoinTool.makeTran(this.main.panelUTXO.assets, targetaddr, assetid, _count);
-                //    tran.type = ThinNeo.TransactionType.InvocationTransaction;
-                //    tran.extdata = new ThinNeo.InvokeTransData();
-                //    let script = null;
-                //    var sb = new ThinNeo.ScriptBuilder();
-                //    var scriptaddress = "0x42832a25cf11d0ceee5629cb8b4daee9bac207ca".hexToBytes().reverse();
-                //    sb.EmitPushString(inputName.value);//���Ƶڶ���������������
-                //    sb.EmitPushBytes(this.main.panelLoadKey.pubkey);//���Ƶڶ����������Լ��Ĺ�Կ
-                //    sb.EmitAppCall(scriptaddress);
-                //    (tran.extdata as ThinNeo.InvokeTransData).script = sb.ToArray();
-                //    //����һ��gas����
-                //    //�������gas�������ˣ����ܺ�Լִ�л�ʧ�ܡ�
-                //    //�������gas����>10,���ױ��붪��gas���������ܺ�Լִ�л�ʧ��
-                //    (tran.extdata as ThinNeo.InvokeTransData).gas = Neo.Fixed8.fromNumber(1.0);
-                //    this.main.panelTransaction.setTran(tran);
-                //};
-            }
-        }
     }
     wallet.WalletFunction = WalletFunction;
 })(wallet || (wallet = {}));
@@ -862,10 +811,14 @@ var wallet;
                 let type = wallet.tools.BootsModule.getFormGroup("Type");
                 let typeSelect = document.createElement("select");
                 let option = document.createElement("option");
-                option.value = "GAS";
-                option.innerText = "GAS";
+                option.value = "0x3fccdb91c9bb66ef2446010796feb6ca4ed96b05";
+                option.innerText = "NNS Coin";
+                let option2 = document.createElement("option");
+                option2.value = "c88acaae8a0362cdbdedddf0083c452a3a8bb7b8";
+                option2.innerText = "CPX Token";
                 type.appendChild(typeSelect);
                 typeSelect.appendChild(option);
+                typeSelect.appendChild(option2);
                 let send = wallet.tools.BootsModule.getFormGroup("");
                 let btn = document.createElement("button");
                 btn.classList.add("btn", "btn-info");
@@ -876,33 +829,43 @@ var wallet;
                 this.body.appendChild(type);
                 this.body.appendChild(send);
                 btn.onclick = () => {
-                    this.initDApp_WhoAmI("AHDV7M54NHukq8f76QQtBTbrCqKJrBH9UF", "9");
+                    this.initDApp_WhoAmI(toInput.value, amountInput.value, typeSelect.value);
                 };
             }
-            initDApp_WhoAmI(to, value) {
-                var pkey = this.app.loadKey.pubkey;
-                var target = this.app.loadKey.address;
-                if (pkey != null) {
-                    var pkeyhash = ThinNeo.Helper.GetPublicKeyScriptHashFromPublicKey(pkey);
-                    let targeraddr = this.app.loadKey.address; //给自己转账
-                    let assetid = wallet.tools.CoinTool.id_GAS;
-                    //let _count = Neo.Fixed8.Zero;   //十个gas内都不要钱滴
-                    let tran = wallet.tools.CoinTool.makeTran(this.app.walletController.getassets(this.app.utxos), targeraddr, assetid, Neo.Fixed8.Zero);
-                    tran.type = ThinNeo.TransactionType.InvocationTransaction;
-                    tran.extdata = new ThinNeo.InvokeTransData();
-                    let script = null;
-                    var sb = new ThinNeo.ScriptBuilder();
-                    var scriptaddress = "c88acaae8a0362cdbdedddf0083c452a3a8bb7b8".hexToBytes().reverse();
-                    sb.EmitParamJson(["(address)" + this.app.loadKey.address, "(address)" + to, "(integer)" + value]); //第二个参数是个数组
-                    sb.EmitPushString("transfer"); //第一个参数
-                    sb.EmitAppCall(scriptaddress); //资产合约
-                    tran.extdata.script = sb.ToArray();
-                    //估计一个gas用量
-                    //如果估计gas用量少了，智能合约执行会失败。
-                    //如果估计gas用量>10,交易必须丢弃gas，否则智能合约执行会失败
-                    tran.extdata.gas = Neo.Fixed8.fromNumber(1.0);
-                    this.app.transaction.setTran(tran);
-                }
+            initDApp_WhoAmI(to, value, type) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    var pkey = this.app.loadKey.pubkey;
+                    var target = this.app.loadKey.address;
+                    var res = yield wallet.tools.Nep5.getInfoByContract(type);
+                    var decimals = res["decimals"];
+                    var bnum = Neo.BigInteger.parse(value);
+                    var v = 1;
+                    for (var i = 0; i < decimals; i++) {
+                        v *= 10;
+                    }
+                    var intv = bnum.multiply(v).toInt32();
+                    if (pkey != null) {
+                        var pkeyhash = ThinNeo.Helper.GetPublicKeyScriptHashFromPublicKey(pkey);
+                        let targeraddr = this.app.loadKey.address; //给自己转账
+                        let assetid = wallet.tools.CoinTool.id_GAS;
+                        //let _count = Neo.Fixed8.Zero;   //十个gas内都不要钱滴
+                        let tran = wallet.tools.CoinTool.makeTran(this.app.walletController.getassets(this.app.utxos), targeraddr, assetid, Neo.Fixed8.Zero);
+                        tran.type = ThinNeo.TransactionType.InvocationTransaction;
+                        tran.extdata = new ThinNeo.InvokeTransData();
+                        let script = null;
+                        var sb = new ThinNeo.ScriptBuilder();
+                        var scriptaddress = type.hexToBytes().reverse();
+                        sb.EmitParamJson(["(address)" + this.app.loadKey.address, "(address)" + to, "(integer)" + intv]); //第二个参数是个数组
+                        sb.EmitPushString("transfer"); //第一个参数
+                        sb.EmitAppCall(scriptaddress); //资产合约
+                        tran.extdata.script = sb.ToArray();
+                        //估计一个gas用量
+                        //如果估计gas用量少了，智能合约执行会失败。
+                        //如果估计gas用量>10,交易必须丢弃gas，否则智能合约执行会失败
+                        tran.extdata.gas = Neo.Fixed8.fromNumber(1.0);
+                        this.app.transaction.setTran(tran);
+                    }
+                });
             }
         }
         module.Nep5 = Nep5;
@@ -1243,6 +1206,99 @@ var wallet;
 (function (wallet) {
     var tools;
     (function (tools) {
+        class Nep5 {
+            static getInfoByContract(sid) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    let res = { name: "", symbol: "", decimals: 0, totalsupply: 0 };
+                    try {
+                        var sb = new ThinNeo.ScriptBuilder();
+                        sb.EmitParamJson(JSON.parse("[]")); //参数倒序入
+                        sb.EmitParamJson("(str)name"); //参数倒序入
+                        var shash = sid.hexToBytes();
+                        sb.EmitAppCall(shash.reverse()); //nep5脚本
+                        sb.EmitParamJson(JSON.parse("[]"));
+                        sb.EmitParamJson("(str)symbol");
+                        var shash = sid.hexToBytes();
+                        sb.EmitAppCall(shash.reverse());
+                        sb.EmitParamJson(JSON.parse("[]"));
+                        sb.EmitParamJson("(str)decimals");
+                        var shash = sid.hexToBytes();
+                        sb.EmitAppCall(shash.reverse());
+                        sb.EmitParamJson(JSON.parse("[]"));
+                        sb.EmitParamJson("(str)totalSupply");
+                        var shash = sid.hexToBytes();
+                        sb.EmitAppCall(shash.reverse());
+                        var data = sb.ToArray();
+                        let result = yield tools.WWW.rpc_getInvokescript(data);
+                        try {
+                            var state = result.state;
+                            // info2.textContent = "";
+                            if (state.includes("HALT")) {
+                                // info2.textContent += "Succ\n";
+                            }
+                            var stack = result.stack;
+                            //find name 他的type 有可能是string 或者ByteArray
+                            if (stack[0].type == "String") {
+                                // info2.textContent += "name=" + stack[0].value + "\n";
+                                res.name = stack[0].value;
+                            }
+                            else if (stack[0].type == "ByteArray") {
+                                var bs = stack[0].value.hexToBytes();
+                                var str = ThinNeo.Helper.Bytes2String(bs);
+                                // info2.textContent += "name=" + str + "\n";
+                                res.name = str;
+                            }
+                            //find symbol 他的type 有可能是string 或者ByteArray
+                            if (stack[1].type == "String") {
+                                // info2.textContent += "symbol=" + stack[1].value + "\n";
+                                res.symbol = stack[1].value;
+                            }
+                            else if (stack[1].type == "ByteArray") {
+                                var bs = stack[1].value.hexToBytes();
+                                var str = ThinNeo.Helper.Bytes2String(bs);
+                                // info2.textContent += "symbol=" + str + "\n";
+                                res.symbol = str;
+                            }
+                            //find decimals 他的type 有可能是 Integer 或者ByteArray
+                            if (stack[2].type == "Integer") {
+                                var decimals = (new Neo.BigInteger(stack[2].value)).toInt32();
+                            }
+                            else if (stack[2].type == "ByteArray") {
+                                var bs = stack[2].value.hexToBytes();
+                                var num = new Neo.BigInteger(bs);
+                                var decimals = num.toInt32();
+                            }
+                            //find decimals 他的type 有可能是 Integer 或者ByteArray
+                            if (stack[3].type == "Integer") {
+                                var totalsupply = (new Neo.BigInteger(stack[3].value)).toInt32();
+                            }
+                            else if (stack[3].type == "ByteArray") {
+                                var bs = stack[3].value.hexToBytes();
+                                var num = new Neo.BigInteger(bs);
+                                totalsupply = num.toInt32();
+                            }
+                            // info2.textContent += "decimals=" + this.nep5decimals + "\n";
+                            res.totalsupply = totalsupply;
+                            res.decimals = decimals;
+                            return res;
+                        }
+                        catch (e) {
+                            return e.message;
+                        }
+                    }
+                    catch (e) {
+                        return e.message;
+                    }
+                });
+            }
+        }
+        tools.Nep5 = Nep5;
+    })(tools = wallet.tools || (wallet.tools = {}));
+})(wallet || (wallet = {}));
+var wallet;
+(function (wallet) {
+    var tools;
+    (function (tools) {
         class Panel {
             constructor() {
                 this.palneDiv = document.createElement("div");
@@ -1525,6 +1581,17 @@ var wallet;
             static rpc_getStorage(scripthash, key) {
                 return __awaiter(this, void 0, void 0, function* () {
                     var str = WWW.makeRpcUrl(WWW.rpc, "getstorage", scripthash.toHexString(), key.toHexString());
+                    var result = yield fetch(str, { "method": "get" });
+                    var json = yield result.json();
+                    if (json["result"] == null)
+                        return null;
+                    var r = json["result"];
+                    return r;
+                });
+            }
+            static rpc_getInvokescript(scripthash) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    var str = WWW.makeRpcUrl(WWW.rpc, "invokescript", scripthash.toHexString());
                     var result = yield fetch(str, { "method": "get" });
                     var json = yield result.json();
                     if (json["result"] == null)
