@@ -834,15 +834,22 @@ var wallet;
             }
             initDApp_WhoAmI(to, value, type) {
                 return __awaiter(this, void 0, void 0, function* () {
+                    var utxos = yield wallet.tools.WWW.api_getUTXO(this.app.loadKey.address);
+                    let allAsset = yield wallet.tools.WWW.api_getAllAssets();
+                    utxos.map((item) => {
+                        item.name = allAsset.find(val => val.id == item.asset).name.map((name) => { return name.name; }).join("|");
+                    });
+                    this.app.utxos = utxos;
                     var pkey = this.app.loadKey.pubkey;
-                    var target = this.app.loadKey.address;
                     var res = yield wallet.tools.Nep5.getInfoByContract(type);
                     var decimals = res["decimals"];
-                    var bnum = Neo.BigInteger.parse(value);
+                    var len = (value).replace(/^\d+\./, '').length;
+                    decimals -= len - 1;
                     var v = 1;
                     for (var i = 0; i < decimals; i++) {
                         v *= 10;
                     }
+                    var bnum = new Neo.BigInteger(value.replace(".", ""));
                     var intv = bnum.multiply(v).toInt32();
                     if (pkey != null) {
                         var pkeyhash = ThinNeo.Helper.GetPublicKeyScriptHashFromPublicKey(pkey);

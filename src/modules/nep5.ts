@@ -60,17 +60,25 @@
 
         async initDApp_WhoAmI(to: string, value: string, type: string)
         {
+            var utxos = await wallet.tools.WWW.api_getUTXO(this.app.loadKey.address);
+            let allAsset: entity.Asset[] = await wallet.tools.WWW.api_getAllAssets();
+            utxos.map((item) =>
+            {
+                item.name = allAsset.find(val => val.id == item.asset).name.map((name) => { return name.name }).join("|");
+            })
+            this.app.utxos = utxos;
             var pkey = this.app.loadKey.pubkey;
-            var target = this.app.loadKey.address;
             var res = await tools.Nep5.getInfoByContract(type);
-            var decimals = res["decimals"];
-            var bnum = Neo.BigInteger.parse(value);
+            var decimals = res["decimals"] as number;
+            var len = (value).replace(/^\d+\./, '').length;
+            decimals -= len-1;
 
             var v = 1;
             for (var i = 0; i < decimals; i++)
             {
                 v *= 10;
             }
+            var bnum = new Neo.BigInteger(value.replace(".",""));
             var intv = bnum.multiply(v).toInt32();
             
             if (pkey != null)
