@@ -56,6 +56,8 @@ namespace wallet
             this.walletController.start(this);
 
             this.walletFunction.init(this);
+
+            tools.NNS.getRootName();
         }
     }
 

@@ -103,6 +103,7 @@
     <TypeScriptCompile Include="src\modules\importwallet.ts" />
     <TypeScriptCompile Include="src\modules\navbar.ts" />
     <TypeScriptCompile Include="src\modules\nep5.ts" />
+    <TypeScriptCompile Include="src\modules\nnstest.ts" />
     <TypeScriptCompile Include="src\modules\sign.ts" />
     <TypeScriptCompile Include="src\modules\transaction.ts" />
     <TypeScriptCompile Include="src\modules\transfer.ts" />
@@ -110,6 +111,7 @@
     <TypeScriptCompile Include="src\tools\cointool.ts" />
     <TypeScriptCompile Include="src\tools\neotool.ts" />
     <TypeScriptCompile Include="src\tools\nep5tool.ts" />
+    <TypeScriptCompile Include="src\tools\nnstool.ts" />
     <TypeScriptCompile Include="src\tools\viewtool.ts" />
     <TypeScriptCompile Include="src\tools\wwwtool.ts" />
     <TypeScriptCompile Include="src\views\walletView.ts" />

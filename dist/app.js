@@ -41,6 +41,7 @@ var wallet;
                 this.nep5.init(this);
                 this.walletController.start(this);
                 this.walletFunction.init(this);
+                wallet.tools.NNS.getRootName();
             });
         }
     }
@@ -882,6 +883,15 @@ var wallet;
 (function (wallet) {
     var module;
     (function (module) {
+        class NNSTest {
+        }
+        module.NNSTest = NNSTest;
+    })(module = wallet.module || (wallet.module = {}));
+})(wallet || (wallet = {}));
+var wallet;
+(function (wallet) {
+    var module;
+    (function (module) {
         class SignModule {
             init(app) {
                 this.app = app;
@@ -1300,6 +1310,83 @@ var wallet;
             }
         }
         tools.Nep5 = Nep5;
+    })(tools = wallet.tools || (wallet.tools = {}));
+})(wallet || (wallet = {}));
+var wallet;
+(function (wallet) {
+    var tools;
+    (function (tools) {
+        class NNS {
+            static getRootName() {
+                return __awaiter(this, void 0, void 0, function* () {
+                    let res = { name: "", symbol: "", decimals: 0, totalsupply: 0 };
+                    var sb = new ThinNeo.ScriptBuilder();
+                    sb.EmitParamJson(JSON.parse("[]"));
+                    sb.EmitPushString("rootName");
+                    var scriptaddress = "0xdffbdd534a41dd4c56ba5ccba9dfaaf4f84e1362".hexToBytes().reverse();
+                    sb.EmitAppCall(scriptaddress);
+                    var data = sb.ToArray();
+                    let result = yield tools.WWW.rpc_getInvokescript(data);
+                    try {
+                        var state = result.state;
+                        // info2.textContent = "";
+                        if (state.includes("HALT")) {
+                            // info2.textContent += "Succ\n";
+                        }
+                        var stack = result.stack;
+                        //find name 他的type 有可能是string 或者ByteArray
+                        if (stack[0].type == "String") {
+                            // info2.textContent += "name=" + stack[0].value + "\n";
+                            res.name = stack[0].value;
+                        }
+                        else if (stack[0].type == "ByteArray") {
+                            var bs = stack[0].value.hexToBytes();
+                            var str = ThinNeo.Helper.Bytes2String(bs);
+                            // info2.textContent += "name=" + str + "\n";
+                            res.name = str;
+                        }
+                        //find symbol 他的type 有可能是string 或者ByteArray
+                        if (stack[1].type == "String") {
+                            // info2.textContent += "symbol=" + stack[1].value + "\n";
+                            res.symbol = stack[1].value;
+                        }
+                        else if (stack[1].type == "ByteArray") {
+                            var bs = stack[1].value.hexToBytes();
+                            var str = ThinNeo.Helper.Bytes2String(bs);
+                            // info2.textContent += "symbol=" + str + "\n";
+                            res.symbol = str;
+                            alert(str);
+                        }
+                        //find decimals 他的type 有可能是 Integer 或者ByteArray
+                        if (stack[2].type == "Integer") {
+                            var decimals = (new Neo.BigInteger(stack[2].value)).toInt32();
+                        }
+                        else if (stack[2].type == "ByteArray") {
+                            var bs = stack[2].value.hexToBytes();
+                            var num = new Neo.BigInteger(bs);
+                            var decimals = num.toInt32();
+                        }
+                        //find decimals 他的type 有可能是 Integer 或者ByteArray
+                        if (stack[3].type == "Integer") {
+                            var totalsupply = (new Neo.BigInteger(stack[3].value)).toInt32();
+                        }
+                        else if (stack[3].type == "ByteArray") {
+                            var bs = stack[3].value.hexToBytes();
+                            var num = new Neo.BigInteger(bs);
+                            totalsupply = num.toInt32();
+                        }
+                        // info2.textContent += "decimals=" + this.nep5decimals + "\n";
+                        res.totalsupply = totalsupply;
+                        res.decimals = decimals;
+                        return res;
+                    }
+                    catch (e) {
+                        return e.message;
+                    }
+                });
+            }
+        }
+        tools.NNS = NNS;
     })(tools = wallet.tools || (wallet.tools = {}));
 })(wallet || (wallet = {}));
 var wallet;
