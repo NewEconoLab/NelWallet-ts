@@ -57,7 +57,8 @@ namespace wallet
 
             this.walletFunction.init(this);
 
-            tools.NNS.getRootName();
+            let nnshash: Uint8Array = await tools.NNS.getNameHash("abc");
+            let info: entity.DomainInfo = await tools.NNS.getDomainInfo(nnshash);
         }
     }
 

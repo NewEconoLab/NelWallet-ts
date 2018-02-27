@@ -41,7 +41,8 @@ var wallet;
                 this.nep5.init(this);
                 this.walletController.start(this);
                 this.walletFunction.init(this);
-                wallet.tools.NNS.getRootName();
+                let nnshash = yield wallet.tools.NNS.getNameHash("abc");
+                let info = yield wallet.tools.NNS.getDomainInfo(nnshash);
             });
         }
     }
@@ -1319,7 +1320,7 @@ var wallet;
         class NNS {
             static getRootName() {
                 return __awaiter(this, void 0, void 0, function* () {
-                    let res = { name: "", symbol: "", decimals: 0, totalsupply: 0 };
+                    let name = "";
                     var sb = new ThinNeo.ScriptBuilder();
                     sb.EmitParamJson(JSON.parse("[]"));
                     sb.EmitPushString("rootName");
@@ -1335,54 +1336,115 @@ var wallet;
                         }
                         var stack = result.stack;
                         //find name 他的type 有可能是string 或者ByteArray
-                        if (stack[0].type == "String") {
+                        if (stack[0].type == "Array") {
                             // info2.textContent += "name=" + stack[0].value + "\n";
-                            res.name = stack[0].value;
-                        }
-                        else if (stack[0].type == "ByteArray") {
-                            var bs = stack[0].value.hexToBytes();
-                            var str = ThinNeo.Helper.Bytes2String(bs);
-                            // info2.textContent += "name=" + str + "\n";
-                            res.name = str;
+                            length = stack[0].lenght;
                         }
                         //find symbol 他的type 有可能是string 或者ByteArray
                         if (stack[1].type == "String") {
                             // info2.textContent += "symbol=" + stack[1].value + "\n";
-                            res.symbol = stack[1].value;
+                            name = stack[1].value;
                         }
                         else if (stack[1].type == "ByteArray") {
                             var bs = stack[1].value.hexToBytes();
-                            var str = ThinNeo.Helper.Bytes2String(bs);
-                            // info2.textContent += "symbol=" + str + "\n";
-                            res.symbol = str;
-                            alert(str);
+                            name = ThinNeo.Helper.Bytes2String(bs);
                         }
-                        //find decimals 他的type 有可能是 Integer 或者ByteArray
-                        if (stack[2].type == "Integer") {
-                            var decimals = (new Neo.BigInteger(stack[2].value)).toInt32();
-                        }
-                        else if (stack[2].type == "ByteArray") {
-                            var bs = stack[2].value.hexToBytes();
-                            var num = new Neo.BigInteger(bs);
-                            var decimals = num.toInt32();
-                        }
-                        //find decimals 他的type 有可能是 Integer 或者ByteArray
-                        if (stack[3].type == "Integer") {
-                            var totalsupply = (new Neo.BigInteger(stack[3].value)).toInt32();
-                        }
-                        else if (stack[3].type == "ByteArray") {
-                            var bs = stack[3].value.hexToBytes();
-                            var num = new Neo.BigInteger(bs);
-                            totalsupply = num.toInt32();
-                        }
-                        // info2.textContent += "decimals=" + this.nep5decimals + "\n";
-                        res.totalsupply = totalsupply;
-                        res.decimals = decimals;
-                        return res;
+                        return name;
                     }
                     catch (e) {
                         return e.message;
                     }
+                });
+            }
+            static getRootNameHash() {
+                return __awaiter(this, void 0, void 0, function* () {
+                    let nameHash;
+                    var sb = new ThinNeo.ScriptBuilder();
+                    sb.EmitParamJson(JSON.parse("[]"));
+                    sb.EmitPushString("rootNameHash");
+                    var scriptaddress = "0xdffbdd534a41dd4c56ba5ccba9dfaaf4f84e1362".hexToBytes().reverse();
+                    sb.EmitAppCall(scriptaddress);
+                    var data = sb.ToArray();
+                    let result = yield tools.WWW.rpc_getInvokescript(data);
+                    try {
+                        var state = result.state;
+                        // info2.textContent = "";
+                        if (state.includes("HALT")) {
+                            // info2.textContent += "Succ\n";
+                        }
+                        var stack = result.stack;
+                        //find name 他的type 有可能是string 或者ByteArray
+                        if (stack[0].type == "ByteArray") {
+                            nameHash = stack[0].value.hexToBytes();
+                        }
+                        return nameHash;
+                    }
+                    catch (e) {
+                        return e.message;
+                    }
+                });
+            }
+            static getDomainInfo(domain) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    let info;
+                    var sb = new ThinNeo.ScriptBuilder();
+                    var scriptaddress = "0xdffbdd534a41dd4c56ba5ccba9dfaaf4f84e1362".hexToBytes().reverse();
+                    sb.EmitParamJson(["(bytes)" + domain.toHexString]); //第二个参数是个数组
+                    sb.EmitPushString("getInfo");
+                    sb.EmitAppCall(scriptaddress);
+                    var data = sb.ToArray();
+                    let result = yield tools.WWW.rpc_getInvokescript(data);
+                    try {
+                        var state = result.state;
+                        // info2.textContent = "";
+                        if (state.includes("HALT")) {
+                            // info2.textContent += "Succ\n";
+                        }
+                        var stack = result.stack;
+                        if (stack[0].type == "ByteArray") {
+                            info.owner = stack[0].value.hexToBytes();
+                        }
+                        if (stack[1].type == "ByteArray") {
+                            info.register = stack[1].value.hexToBytes();
+                        }
+                        if (stack[2].type == "ByteArray") {
+                            info.resolver = stack[2].value.hexToBytes();
+                        }
+                        if (stack[3].type == "Integer") {
+                            info.ttl = new Neo.BigInteger(stack[3].value);
+                        }
+                    }
+                    catch (e) {
+                    }
+                    return info;
+                });
+            }
+            static getNameHash(domain) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    let namehash;
+                    var sb = new ThinNeo.ScriptBuilder();
+                    var scriptaddress = "0xdffbdd534a41dd4c56ba5ccba9dfaaf4f84e1362".hexToBytes().reverse();
+                    sb.EmitParamJson(["(str)" + domain]); //第二个参数是个数组
+                    sb.EmitPushString("nameHash");
+                    sb.EmitAppCall(scriptaddress);
+                    var data = sb.ToArray();
+                    let result = yield tools.WWW.rpc_getInvokescript(data);
+                    try {
+                        var state = result.state;
+                        // info2.textContent = "";
+                        if (state.includes("HALT")) {
+                            // info2.textContent += "Succ\n";
+                        }
+                        var stack = result.stack;
+                        //find name 他的type 有可能是string 或者ByteArray
+                        if (stack[0].type == "ByteArray") {
+                            namehash = stack[0].value.hexToBytes();
+                        }
+                    }
+                    catch (e) {
+                        console.log(e);
+                    }
+                    return namehash;
                 });
             }
         }
