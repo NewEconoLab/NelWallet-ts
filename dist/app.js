@@ -43,6 +43,7 @@ var wallet;
                 this.walletFunction.init(this);
                 let nnshash = yield wallet.tools.NNS.getNameHash("abc");
                 let info = yield wallet.tools.NNS.getDomainInfo(nnshash);
+                let str = "";
             });
         }
     }
@@ -83,6 +84,9 @@ var wallet;
             }
         }
         entity.loadKey = loadKey;
+        class DomainInfo {
+        }
+        entity.DomainInfo = DomainInfo;
     })(entity = wallet.entity || (wallet.entity = {}));
 })(wallet || (wallet = {}));
 ///<reference path="../../lib/neo-ts.d.ts"/>
@@ -1386,7 +1390,7 @@ var wallet;
             }
             static getDomainInfo(domain) {
                 return __awaiter(this, void 0, void 0, function* () {
-                    let info;
+                    let info = new wallet.entity.DomainInfo();
                     var sb = new ThinNeo.ScriptBuilder();
                     var scriptaddress = "0xdffbdd534a41dd4c56ba5ccba9dfaaf4f84e1362".hexToBytes().reverse();
                     sb.EmitParamJson(["(bytes)" + domain.toHexString]); //第二个参数是个数组

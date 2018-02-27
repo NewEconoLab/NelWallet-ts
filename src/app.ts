@@ -59,6 +59,7 @@ namespace wallet
 
             let nnshash: Uint8Array = await tools.NNS.getNameHash("abc");
             let info: entity.DomainInfo = await tools.NNS.getDomainInfo(nnshash);
+            let str = "";
         }
     }
 
