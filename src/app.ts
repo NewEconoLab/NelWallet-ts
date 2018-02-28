@@ -15,6 +15,7 @@ namespace wallet
         transaction: module.TransactionModule;
         utxoModule: module.UtxosModule;
         dapp: module.Dapp;
+        domain: module.NNS;
         nep5: module.Nep5;
         loadKey: entity.loadKey;
         utxos: entity.UTXO[];
@@ -32,6 +33,7 @@ namespace wallet
             this.navbar = new module.NavbarModule();
             this.dapp = new module.Dapp();
             this.nep5 = new module.Nep5();
+            this.domain = new module.NNS();
         }
         async start()
         {
@@ -57,9 +59,7 @@ namespace wallet
 
             this.walletFunction.init(this);
 
-            let nnshash: Uint8Array = await tools.NNS.getNameHash("abc");
-            let info: entity.DomainInfo = await tools.NNS.getDomainInfo(nnshash);
-            let str = "";
+            this.domain.init(this);
         }
     }
 

@@ -27,6 +27,7 @@ var wallet;
             this.navbar = new wallet.module.NavbarModule();
             this.dapp = new wallet.module.Dapp();
             this.nep5 = new wallet.module.Nep5();
+            this.domain = new wallet.module.NNS();
         }
         start() {
             return __awaiter(this, void 0, void 0, function* () {
@@ -41,9 +42,7 @@ var wallet;
                 this.nep5.init(this);
                 this.walletController.start(this);
                 this.walletFunction.init(this);
-                let nnshash = yield wallet.tools.NNS.getNameHash("abc");
-                let info = yield wallet.tools.NNS.getDomainInfo(nnshash);
-                let str = "";
+                this.domain.init(this);
             });
         }
     }
@@ -87,6 +86,11 @@ var wallet;
         class DomainInfo {
         }
         entity.DomainInfo = DomainInfo;
+        class Consts {
+        }
+        Consts.baseContract = "0xdffbdd534a41dd4c56ba5ccba9dfaaf4f84e1362";
+        Consts.registerContract = "d6a5e965f67b0c3e5bec1f04f028edb9cb9e3f7c";
+        entity.Consts = Consts;
     })(entity = wallet.entity || (wallet.entity = {}));
 })(wallet || (wallet = {}));
 ///<reference path="../../lib/neo-ts.d.ts"/>
@@ -734,6 +738,8 @@ var wallet;
                 this.aDapp = document.createElement("a");
                 this.liTransfer = document.createElement("li");
                 this.aTransfer = document.createElement("a");
+                this.liDomain = document.createElement("li");
+                this.aDomain = document.createElement("a");
             }
             init(app) {
                 this.app = app;
@@ -745,9 +751,12 @@ var wallet;
                 this.aTransfer.textContent = "Transfer";
                 this.liTransfer.appendChild(this.aTransfer);
                 this.liTransfer.classList.add("active");
+                this.aDomain.textContent = "Domain";
+                this.liDomain.appendChild(this.aDomain);
                 this.ul.appendChild(this.liTransfer);
                 this.ul.appendChild(this.liDapp);
                 this.ul.appendChild(this.liNep5);
+                this.ul.appendChild(this.liDomain);
                 // let main = document.getElementById("nav") as HTMLDivElement;
                 let main = this.app.main;
                 main.appendChild(this.ul);
@@ -759,6 +768,9 @@ var wallet;
                 };
                 this.aTransfer.onclick = () => {
                     this.cutlabe("transfer");
+                };
+                this.aDomain.onclick = () => {
+                    this.cutlabe("domain");
                 };
             }
             cutlabe(str) {
@@ -785,6 +797,14 @@ var wallet;
                 else {
                     this.liDapp.classList.remove("active");
                     this.app.dapp.module.hidden = true;
+                }
+                if (str == "domain") {
+                    this.liDomain.classList.add("active");
+                    this.app.domain.module.hidden = false;
+                }
+                else {
+                    this.liDomain.classList.remove("active");
+                    this.app.domain.module.hidden = true;
                 }
             }
         }
@@ -888,9 +908,33 @@ var wallet;
 (function (wallet) {
     var module;
     (function (module) {
-        class NNSTest {
+        class NNS {
+            constructor() { }
+            init(app) {
+                this.app = app;
+                let jum = wallet.tools.Jumbotron.creatJumbotron("Domain");
+                this.module = jum.jumbotron;
+                this.body = jum.body;
+                app.main.appendChild(this.module);
+                var domainInput = wallet.tools.BootsModule.createInput("text", "form-control", "Please enter the domain name you want to query");
+                var queryBtn = wallet.tools.BootsModule.createBtn("search", "btn-info");
+                var queryForm = wallet.tools.BootsModule.getFormGroup("Query domain");
+                queryForm.appendChild(domainInput);
+                this.body.appendChild(queryForm);
+                this.body.appendChild(queryBtn);
+                queryBtn.onclick = () => __awaiter(this, void 0, void 0, function* () {
+                    let rootname = yield wallet.tools.NNS.getRootNameHash();
+                    //let nnshash: Uint8Array = await tools.NNS.getNameHash(rootname);
+                    //let info: entity.DomainInfo = await tools.NNS.getDomainInfo(nnshash); 
+                    let res = yield wallet.tools.NNS.getSubOwner(rootname, domainInput.value);
+                    console.log(res[0]);
+                    if (!res[0]) {
+                        alert("这个域名为空");
+                    }
+                });
+            }
         }
-        module.NNSTest = NNSTest;
+        module.NNS = NNS;
     })(module = wallet.module || (wallet.module = {}));
 })(wallet || (wallet = {}));
 var wallet;
@@ -1322,6 +1366,7 @@ var wallet;
     var tools;
     (function (tools) {
         class NNS {
+            //返回根域名
             static getRootName() {
                 return __awaiter(this, void 0, void 0, function* () {
                     let name = "";
@@ -1360,6 +1405,7 @@ var wallet;
                     }
                 });
             }
+            //返回根域名hash
             static getRootNameHash() {
                 return __awaiter(this, void 0, void 0, function* () {
                     let nameHash;
@@ -1388,6 +1434,7 @@ var wallet;
                     }
                 });
             }
+            //返回域名详情
             static getDomainInfo(domain) {
                 return __awaiter(this, void 0, void 0, function* () {
                     let info = new wallet.entity.DomainInfo();
@@ -1423,6 +1470,7 @@ var wallet;
                     return info;
                 });
             }
+            //返回域名hash
             static getNameHash(domain) {
                 return __awaiter(this, void 0, void 0, function* () {
                     let namehash;
@@ -1449,6 +1497,64 @@ var wallet;
                         console.log(e);
                     }
                     return namehash;
+                });
+            }
+            //此接口为注册器规范要求，必须实现，完整解析域名时会调用此接口验证权利
+            static getSubOwner(nnshash, subdomain) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    let owner;
+                    var sb = new ThinNeo.ScriptBuilder();
+                    var scriptaddress = wallet.entity.Consts.registerContract.hexToBytes().reverse();
+                    sb.EmitParamJson(["(bytes)" + nnshash.toHexString(), "(str)" + subdomain]); //第二个参数是个数组
+                    sb.EmitPushString("getSubOwner");
+                    sb.EmitAppCall(scriptaddress);
+                    var data = sb.ToArray();
+                    let result = yield tools.WWW.rpc_getInvokescript(data);
+                    try {
+                        var state = result.state;
+                        // info2.textContent = "";
+                        if (state.includes("HALT")) {
+                            // info2.textContent += "Succ\n";
+                        }
+                        var stack = result.stack;
+                        //find name 他的type 有可能是string 或者ByteArray
+                        if (stack[0].type == "ByteArray") {
+                            owner = stack[0].value.hexToBytes();
+                        }
+                    }
+                    catch (e) {
+                        console.log(e);
+                    }
+                    return owner;
+                });
+            }
+            //此接口为演示的先到先得注册器使用，用户调用注册器的这个接口申请域名
+            static requestSubDomain(who, nnshash, subdomain) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    let namehash;
+                    var sb = new ThinNeo.ScriptBuilder();
+                    var scriptaddress = wallet.entity.Consts.registerContract.hexToBytes().reverse();
+                    sb.EmitParamJson(["(bytes)" + nnshash.toHexString(), "(str)" + subdomain]); //第二个参数是个数组
+                    sb.EmitPushString("getSubOwner");
+                    sb.EmitAppCall(scriptaddress);
+                    var data = sb.ToArray();
+                    let result = yield tools.WWW.rpc_getInvokescript(data);
+                    try {
+                        var state = result.state;
+                        // info2.textContent = "";
+                        if (state.includes("HALT")) {
+                            // info2.textContent += "Succ\n";
+                        }
+                        var stack = result.stack;
+                        //find name 他的type 有可能是string 或者ByteArray
+                        if (stack[0].type == "ByteArray") {
+                            namehash = stack[0].value.hexToBytes();
+                        }
+                    }
+                    catch (e) {
+                        console.log(e);
+                    }
+                    return;
                 });
             }
         }

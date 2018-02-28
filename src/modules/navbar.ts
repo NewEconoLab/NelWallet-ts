@@ -10,6 +10,8 @@ namespace wallet.module
         public aDapp: HTMLAnchorElement = document.createElement("a");
         public liTransfer: HTMLLIElement = document.createElement("li");
         public aTransfer: HTMLAnchorElement = document.createElement("a");
+        public liDomain: HTMLLIElement = document.createElement("li");
+        public aDomain: HTMLAnchorElement = document.createElement("a");
 
         app: App;
         init(app: App)
@@ -24,10 +26,13 @@ namespace wallet.module
             this.aTransfer.textContent = "Transfer";
             this.liTransfer.appendChild(this.aTransfer);
             this.liTransfer.classList.add("active");
+            this.aDomain.textContent = "Domain";
+            this.liDomain.appendChild(this.aDomain);
 
             this.ul.appendChild(this.liTransfer);
             this.ul.appendChild(this.liDapp);
             this.ul.appendChild(this.liNep5);
+            this.ul.appendChild(this.liDomain);
             // let main = document.getElementById("nav") as HTMLDivElement;
             let main = this.app.main;
             main.appendChild(this.ul);
@@ -43,6 +48,10 @@ namespace wallet.module
             this.aTransfer.onclick = () =>
             {
                 this.cutlabe("transfer");
+            }
+            this.aDomain.onclick = () =>
+            {
+                this.cutlabe("domain");
             }
 
         }
@@ -74,6 +83,15 @@ namespace wallet.module
             {
                 this.liDapp.classList.remove("active");
                 this.app.dapp.module.hidden = true;
+            }
+            if (str == "domain")
+            {
+                this.liDomain.classList.add("active");
+                this.app.domain.module.hidden = false;
+            } else
+            {
+                this.liDomain.classList.remove("active");
+                this.app.domain.module.hidden = true;
             }
         }
     }

@@ -111,5 +111,10 @@ namespace wallet.entity
         ttl: Neo.BigInteger//到期时间
     }
 
+    export class Consts
+    {
+        static baseContract= "0xdffbdd534a41dd4c56ba5ccba9dfaaf4f84e1362";
+        static registerContract= "d6a5e965f67b0c3e5bec1f04f028edb9cb9e3f7c";
+    }
 
 }

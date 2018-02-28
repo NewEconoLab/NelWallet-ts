@@ -103,7 +103,7 @@
     <TypeScriptCompile Include="src\modules\importwallet.ts" />
     <TypeScriptCompile Include="src\modules\navbar.ts" />
     <TypeScriptCompile Include="src\modules\nep5.ts" />
-    <TypeScriptCompile Include="src\modules\nnstest.ts" />
+    <TypeScriptCompile Include="src\modules\nns.ts" />
     <TypeScriptCompile Include="src\modules\sign.ts" />
     <TypeScriptCompile Include="src\modules\transaction.ts" />
     <TypeScriptCompile Include="src\modules\transfer.ts" />

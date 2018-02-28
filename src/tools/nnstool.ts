@@ -2,6 +2,7 @@
 {
     export class NNS
     {
+        //返回根域名
         static async getRootName(): Promise<string>
         {
 
@@ -51,6 +52,7 @@
             }
         }
 
+        //返回根域名hash
         static async getRootNameHash(): Promise<Uint8Array>
 
         {
@@ -88,6 +90,7 @@
             }
         }
 
+        //返回域名详情
         static async getDomainInfo(domain: Uint8Array): Promise<entity.DomainInfo>
         {
             let info: entity.DomainInfo = new entity.DomainInfo();
@@ -133,6 +136,7 @@
             return info;
         }
 
+        //返回域名hash
         static async getNameHash(domain: string): Promise<Uint8Array>
         {
             let namehash: Uint8Array
@@ -166,6 +170,78 @@
             }
 
             return namehash;
+        }
+
+        //此接口为注册器规范要求，必须实现，完整解析域名时会调用此接口验证权利
+        static async getSubOwner(nnshash: Uint8Array, subdomain: string): Promise<Uint8Array>
+        {
+
+            let owner: Uint8Array
+            var sb = new ThinNeo.ScriptBuilder();
+            var scriptaddress = entity.Consts.registerContract.hexToBytes().reverse();
+            sb.EmitParamJson(["(bytes)" + nnshash.toHexString(), "(str)" + subdomain]);//第二个参数是个数组
+            sb.EmitPushString("getSubOwner");
+            sb.EmitAppCall(scriptaddress);
+            var data = sb.ToArray();
+
+            let result = await tools.WWW.rpc_getInvokescript(data);
+
+            try
+            {
+                var state = result.state as string;
+                // info2.textContent = "";
+                if (state.includes("HALT"))
+                {
+                    // info2.textContent += "Succ\n";
+                }
+                var stack = result.stack as any[];
+                //find name 他的type 有可能是string 或者ByteArray
+                if (stack[0].type == "ByteArray")
+                {
+                    owner = (stack[0].value as string).hexToBytes();
+                }
+            }
+            catch (e)
+            {
+                console.log(e);
+            }
+            return owner;
+        }
+
+        //此接口为演示的先到先得注册器使用，用户调用注册器的这个接口申请域名
+        static async requestSubDomain(who: string, nnshash: Uint8Array, subdomain: string): Promise<any>
+        {
+
+            let namehash: Uint8Array
+            var sb = new ThinNeo.ScriptBuilder();
+            var scriptaddress = entity.Consts.registerContract.hexToBytes().reverse();
+            sb.EmitParamJson(["(bytes)" + nnshash.toHexString(), "(str)" + subdomain]);//第二个参数是个数组
+            sb.EmitPushString("getSubOwner");
+            sb.EmitAppCall(scriptaddress);
+            var data = sb.ToArray();
+
+            let result = await tools.WWW.rpc_getInvokescript(data);
+
+            try
+            {
+                var state = result.state as string;
+                // info2.textContent = "";
+                if (state.includes("HALT"))
+                {
+                    // info2.textContent += "Succ\n";
+                }
+                var stack = result.stack as any[];
+                //find name 他的type 有可能是string 或者ByteArray
+                if (stack[0].type == "ByteArray")
+                {
+                    namehash = (stack[0].value as string).hexToBytes();
+                }
+            }
+            catch (e)
+            {
+                console.log(e);
+            }
+            return;
         }
     }
 }
