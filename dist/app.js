@@ -43,6 +43,10 @@ var wallet;
                 this.walletController.start(this);
                 this.walletFunction.init(this);
                 this.domain.init(this);
+                var namehash1 = yield wallet.tools.NNS.getNameHash("aa");
+                console.log(namehash1.toHexString);
+                var namehash2 = wallet.tools.NNS.nameHash("aa");
+                console.log(namehash2.toHexString);
             });
         }
     }
@@ -918,18 +922,64 @@ var wallet;
                 app.main.appendChild(this.module);
                 var domainInput = wallet.tools.BootsModule.createInput("text", "form-control", "Please enter the domain name you want to query");
                 var queryBtn = wallet.tools.BootsModule.createBtn("search", "btn-info");
+                var registerBtn = wallet.tools.BootsModule.createBtn("注册", "btn-info");
                 var queryForm = wallet.tools.BootsModule.getFormGroup("Query domain");
                 queryForm.appendChild(domainInput);
                 this.body.appendChild(queryForm);
                 this.body.appendChild(queryBtn);
+                this.body.appendChild(registerBtn);
                 queryBtn.onclick = () => __awaiter(this, void 0, void 0, function* () {
-                    let rootname = yield wallet.tools.NNS.getRootNameHash();
+                    var domainarr = domainInput.value.split('.');
+                    var subdomain = domainarr[0];
+                    var root = yield wallet.tools.NNS.getRootName();
+                    domainarr.shift();
+                    domainarr.push(root);
+                    var nnshash = wallet.tools.NNS.nameHashArray(domainarr);
+                    let domains = yield wallet.tools.NNS.getSubOwner(nnshash, subdomain);
+                    if (!domains.length[0]) {
+                        alert("此域名为空!!!");
+                    }
+                    //let rootname: Uint8Array = await tools.NNS.getRootNameHash();
                     //let nnshash: Uint8Array = await tools.NNS.getNameHash(rootname);
                     //let info: entity.DomainInfo = await tools.NNS.getDomainInfo(nnshash); 
-                    let res = yield wallet.tools.NNS.getSubOwner(rootname, domainInput.value);
-                    console.log(res[0]);
-                    if (!res[0]) {
-                        alert("这个域名为空");
+                    //let res = await tools.NNS.getSubOwner(nnshash, domainInput.value);
+                    //console.log(res[0]);
+                    //if (!res[0])
+                    //{
+                    //    alert("这个域名为空");
+                    //}
+                });
+                registerBtn.onclick = () => __awaiter(this, void 0, void 0, function* () {
+                    var who = "";
+                    var nnshash = "";
+                    var subdomain = "";
+                    var utxos = yield wallet.tools.WWW.api_getUTXO(this.app.loadKey.address);
+                    let allAsset = yield wallet.tools.WWW.api_getAllAssets();
+                    utxos.map((item) => {
+                        item.name = allAsset.find(val => val.id == item.asset).name.map((name) => { return name.name; }).join("|");
+                    });
+                    var pkey = this.app.loadKey.pubkey;
+                    this.app.utxos = utxos;
+                    if (pkey != null) {
+                        var pkeyhash = ThinNeo.Helper.GetPublicKeyScriptHashFromPublicKey(pkey);
+                        let targeraddr = this.app.loadKey.address; //给自己转账
+                        let assetid = wallet.tools.CoinTool.id_GAS;
+                        //let _count = Neo.Fixed8.Zero;   //十个gas内都不要钱滴
+                        let tran = wallet.tools.CoinTool.makeTran(this.app.walletController.getassets(this.app.utxos), targeraddr, assetid, Neo.Fixed8.Zero);
+                        tran.type = ThinNeo.TransactionType.InvocationTransaction;
+                        tran.extdata = new ThinNeo.InvokeTransData();
+                        let script = null;
+                        var sb = new ThinNeo.ScriptBuilder();
+                        var scriptaddress = "dffbdd534a41dd4c56ba5ccba9dfaaf4f84e1362".hexToBytes().reverse();
+                        sb.EmitParamJson(["(address)" + who, "(ByteArray)" + nnshash, "(str)" + subdomain]); //第二个参数是个数组
+                        sb.EmitPushString("transfer"); //第一个参数
+                        sb.EmitAppCall(scriptaddress); //资产合约
+                        tran.extdata.script = sb.ToArray();
+                        //估计一个gas用量
+                        //如果估计gas用量少了，智能合约执行会失败。
+                        //如果估计gas用量>10,交易必须丢弃gas，否则智能合约执行会失败
+                        tran.extdata.gas = Neo.Fixed8.fromNumber(1.0);
+                        this.app.transaction.setTran(tran);
                     }
                 });
             }
@@ -1389,13 +1439,8 @@ var wallet;
                             // info2.textContent += "name=" + stack[0].value + "\n";
                             length = stack[0].lenght;
                         }
-                        //find symbol 他的type 有可能是string 或者ByteArray
-                        if (stack[1].type == "String") {
-                            // info2.textContent += "symbol=" + stack[1].value + "\n";
-                            name = stack[1].value;
-                        }
-                        else if (stack[1].type == "ByteArray") {
-                            var bs = stack[1].value.hexToBytes();
+                        else if (stack[0].type == "ByteArray") {
+                            var bs = stack[0].value.hexToBytes();
                             name = ThinNeo.Helper.Bytes2String(bs);
                         }
                         return name;
@@ -1499,7 +1544,31 @@ var wallet;
                     return namehash;
                 });
             }
-            //此接口为注册器规范要求，必须实现，完整解析域名时会调用此接口验证权利
+            //计算子域名hash
+            static getNameHashSub(domainhash, subdomain) {
+                return __awaiter(this, void 0, void 0, function* () {
+                });
+            }
+            //nanmeHashArray
+            static getNameHashArray(nameArray) {
+                return __awaiter(this, void 0, void 0, function* () {
+                });
+            }
+            //解析域名
+            static resolve(protocol, hash, subdomain) {
+                return __awaiter(this, void 0, void 0, function* () {
+                });
+            }
+            //解析域名完整模式
+            static resolveFull(protocol, nameArray) {
+                return __awaiter(this, void 0, void 0, function* () {
+                });
+            }
+            /**
+             * 此接口为注册器规范要求，必须实现，完整解析域名时会调用此接口验证权利
+             * @param nnshash   域名中除最后一位的hash : aa.bb.cc 中的 bb.cc的hash
+             * @param subdomain 域名中的最后一位: aa.bb.cc 中的 aa
+             */
             static getSubOwner(nnshash, subdomain) {
                 return __awaiter(this, void 0, void 0, function* () {
                     let owner;
@@ -1528,7 +1597,12 @@ var wallet;
                     return owner;
                 });
             }
-            //此接口为演示的先到先得注册器使用，用户调用注册器的这个接口申请域名
+            /**
+             * 此接口为演示的先到先得注册器使用，用户调用注册器的这个接口申请域名
+             * @param who         注册人的地址
+             * @param nnshash     域名中除最后一位的hash : aa.bb.cc 中的 bb.cc的hash
+             * @param subdomain   域名中的最后一位: aa.bb.cc 中的 aa
+             */
             static requestSubDomain(who, nnshash, subdomain) {
                 return __awaiter(this, void 0, void 0, function* () {
                     let namehash;
@@ -1556,6 +1630,47 @@ var wallet;
                     }
                     return;
                 });
+            }
+            //#region 域名转hash算法
+            //域名转hash算法
+            //aaa.bb.test =>{"test","bb","aa"}
+            /**
+             * 域名转hash
+             * @param domain 域名
+             */
+            static nameHash(domain) {
+                var domain_bytes = ThinNeo.Helper.String2Bytes(domain);
+                var hashd = Neo.Cryptography.Sha256.computeHash(domain_bytes);
+                var namehash = new Uint8Array(hashd);
+                return namehash.clone();
+            }
+            /**
+             * 子域名转hash
+             * @param roothash  根域名hash
+             * @param subdomain 子域名
+             */
+            static nameHashSub(roothash, subdomain) {
+                var bs = ThinNeo.Helper.String2Bytes(subdomain);
+                if (bs.length == 0)
+                    return roothash;
+                var domain = Neo.Cryptography.Sha256.computeHash(bs);
+                var domain_bytes = new Uint8Array(domain);
+                var domainUint8arry = domain_bytes.concat(roothash);
+                var sub = Neo.Cryptography.Sha256.computeHash(domainUint8arry);
+                var sub_bytes = new Uint8Array(sub);
+                return sub_bytes.clone();
+            }
+            /**
+             * 返回一组域名的最终hash
+             * @param domainarray 域名倒叙的数组
+             */
+            static nameHashArray(domainarray) {
+                domainarray.reverse();
+                var hash = NNS.nameHash(domainarray[0]);
+                for (var i = 1; i < domainarray.length; i++) {
+                    hash = NNS.nameHashSub(hash, domainarray[i]);
+                }
+                return hash;
             }
         }
         tools.NNS = NNS;

@@ -60,6 +60,12 @@ namespace wallet
             this.walletFunction.init(this);
 
             this.domain.init(this);
+
+            var namehash1 = await tools.NNS.getNameHash("aa");
+            console.log(namehash1.toHexString);
+            var namehash2 = tools.NNS.nameHash("aa");
+            console.log(namehash2.toHexString);
+
         }
     }
 

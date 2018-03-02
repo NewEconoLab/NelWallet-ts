@@ -32,15 +32,9 @@
                     // info2.textContent += "name=" + stack[0].value + "\n";
                     length = stack[0].lenght;
                 }
-                //find symbol 他的type 有可能是string 或者ByteArray
-                if (stack[1].type == "String")
+                else if (stack[0].type == "ByteArray")
                 {
-                    // info2.textContent += "symbol=" + stack[1].value + "\n";
-                    name = stack[1].value;
-                }
-                else if (stack[1].type == "ByteArray")
-                {
-                    var bs = (stack[1].value as string).hexToBytes();
+                    var bs = (stack[0].value as string).hexToBytes();
                     name = ThinNeo.Helper.Bytes2String(bs);
                 }
 
@@ -172,7 +166,35 @@
             return namehash;
         }
 
-        //此接口为注册器规范要求，必须实现，完整解析域名时会调用此接口验证权利
+        //计算子域名hash
+        static async getNameHashSub(domainhash: Uint8Array, subdomain: string)
+        {
+
+        }
+
+        //nanmeHashArray
+        static async getNameHashArray(nameArray: string[])
+        {
+
+        }
+
+        //解析域名
+        static async resolve(protocol: string, hash: Uint8Array, subdomain: string)
+        {
+
+        }
+
+        //解析域名完整模式
+        static async resolveFull(protocol: string, nameArray: string[])
+        {
+
+        }
+        
+        /**
+         * 此接口为注册器规范要求，必须实现，完整解析域名时会调用此接口验证权利
+         * @param nnshash   域名中除最后一位的hash : aa.bb.cc 中的 bb.cc的hash
+         * @param subdomain 域名中的最后一位: aa.bb.cc 中的 aa
+         */
         static async getSubOwner(nnshash: Uint8Array, subdomain: string): Promise<Uint8Array>
         {
 
@@ -207,8 +229,13 @@
             }
             return owner;
         }
-
-        //此接口为演示的先到先得注册器使用，用户调用注册器的这个接口申请域名
+        
+        /**
+         * 此接口为演示的先到先得注册器使用，用户调用注册器的这个接口申请域名
+         * @param who         注册人的地址
+         * @param nnshash     域名中除最后一位的hash : aa.bb.cc 中的 bb.cc的hash
+         * @param subdomain   域名中的最后一位: aa.bb.cc 中的 aa
+         */
         static async requestSubDomain(who: string, nnshash: Uint8Array, subdomain: string): Promise<any>
         {
 
@@ -243,5 +270,59 @@
             }
             return;
         }
+
+        //#region 域名转hash算法
+        //域名转hash算法
+        //aaa.bb.test =>{"test","bb","aa"}
+        /**
+         * 域名转hash
+         * @param domain 域名
+         */
+        static nameHash(domain: string): Uint8Array
+        {
+            var domain_bytes = ThinNeo.Helper.String2Bytes(domain);
+            var hashd = Neo.Cryptography.Sha256.computeHash(domain_bytes);
+            var namehash = new Uint8Array(hashd);
+            return namehash.clone();
+        }
+
+        /**
+         * 子域名转hash
+         * @param roothash  根域名hash
+         * @param subdomain 子域名
+         */
+        static nameHashSub(roothash: Uint8Array, subdomain: string): Uint8Array
+        {
+            var bs: Uint8Array = ThinNeo.Helper.String2Bytes(subdomain);
+            if (bs.length == 0)
+                return roothash;
+
+            var domain = Neo.Cryptography.Sha256.computeHash(bs);
+            var domain_bytes = new Uint8Array(domain);
+            var domainUint8arry = domain_bytes.concat(roothash);
+
+            var sub = Neo.Cryptography.Sha256.computeHash(domainUint8arry);
+            var sub_bytes = new Uint8Array(sub);
+            return sub_bytes.clone();
+        }
+
+        /**
+         * 返回一组域名的最终hash
+         * @param domainarray 域名倒叙的数组
+         */
+        static nameHashArray(domainarray:string[]):Uint8Array
+        {
+            domainarray.reverse();
+            var hash: Uint8Array = NNS.nameHash(domainarray[0]);
+            for (var i = 1; i < domainarray.length; i++)
+            {
+                hash = NNS.nameHashSub(hash, domainarray[i]);
+            }
+            return hash;
+        }
     }
+
+
+
+
 }
