@@ -2,6 +2,7 @@
 {
     export class NNS
     {
+
         //返回根域名
         static async getRootName(): Promise<string>
         {
@@ -12,7 +13,7 @@
 
             sb.EmitParamJson(JSON.parse("[]"));
             sb.EmitPushString("rootName");
-            var scriptaddress = "0xdffbdd534a41dd4c56ba5ccba9dfaaf4f84e1362".hexToBytes().reverse();
+            var scriptaddress = entity.Consts.baseContract.hexToBytes().reverse();
             sb.EmitAppCall(scriptaddress);
             var data = sb.ToArray();
 
@@ -57,7 +58,7 @@
 
             sb.EmitParamJson(JSON.parse("[]"));
             sb.EmitPushString("rootNameHash");
-            var scriptaddress = "0xdffbdd534a41dd4c56ba5ccba9dfaaf4f84e1362".hexToBytes().reverse();
+            var scriptaddress = entity.Consts.baseContract.hexToBytes().reverse();
             sb.EmitAppCall(scriptaddress);
             var data = sb.ToArray();
 
@@ -89,8 +90,8 @@
         {
             let info: entity.DomainInfo = new entity.DomainInfo();
             var sb = new ThinNeo.ScriptBuilder();
-            var scriptaddress = "0xdffbdd534a41dd4c56ba5ccba9dfaaf4f84e1362".hexToBytes().reverse();
-            sb.EmitParamJson(["(bytes)" + domain.toHexString]);//第二个参数是个数组
+            var scriptaddress = entity.Consts.baseContract.hexToBytes().reverse();
+            sb.EmitParamJson(["(bytes)" + domain.toHexString()]);//第二个参数是个数组
             sb.EmitPushString("getInfo");
             sb.EmitAppCall(scriptaddress);
             var data = sb.ToArray();
@@ -105,23 +106,27 @@
                 {
                     // info2.textContent += "Succ\n";
                 }
-                var stack = result.stack as any[];
-                if (stack[0].type == "ByteArray")
+                var stackarr = result.stack as any[];
+                if (stackarr[0].type == "Array")
                 {
-                    info.owner = (stack[0].value as string).hexToBytes();
-                    
-                }
-                if (stack[1].type == "ByteArray")
-                {
-                    info.register = (stack[1].value as string).hexToBytes();
-                }
-                if (stack[2].type == "ByteArray")
-                {
-                    info.resolver = (stack[2].value as string).hexToBytes();
-                }
-                if (stack[3].type == "Integer")
-                {
-                    info.ttl = new Neo.BigInteger(stack[3].value as string);
+                    var stack = stackarr[0].value as any[];
+                    if (stack[0].type == "ByteArray")
+                    {
+                        info.owner = (stack[0].value as string).hexToBytes();
+
+                    }
+                    if (stack[1].type == "ByteArray")
+                    {
+                        info.register = (stack[1].value as string).hexToBytes();
+                    }
+                    if (stack[2].type == "ByteArray")
+                    {
+                        info.resolver = (stack[2].value as string).hexToBytes();
+                    }
+                    if (stack[3].type == "Integer")
+                    {
+                        info.ttl = new Neo.BigInteger(stack[3].value as string);
+                    }
                 }
             }
             catch (e)
@@ -135,7 +140,7 @@
         {
             let namehash: Uint8Array
             var sb = new ThinNeo.ScriptBuilder();
-            var scriptaddress = "0xdffbdd534a41dd4c56ba5ccba9dfaaf4f84e1362".hexToBytes().reverse();
+            var scriptaddress = entity.Consts.baseContract.hexToBytes().reverse();
             sb.EmitParamJson(["(str)" + domain]);//第二个参数是个数组
             sb.EmitPushString("nameHash");
             sb.EmitAppCall(scriptaddress);
@@ -179,9 +184,17 @@
         }
 
         //解析域名
-        static async resolve(protocol: string, hash: Uint8Array, subdomain: string)
+        static async resolve(protocol: string, nnshash: Uint8Array, scriptaddress): Promise<Uint8Array>
         {
+            let namehash: Uint8Array
+            var sb = new ThinNeo.ScriptBuilder();
+            sb.EmitParamJson(["(str)" + protocol, "(bytes)" + nnshash.toHexString()]);//第二个参数是个数组
+            sb.EmitPushString("resolve");
+            sb.EmitAppCall(scriptaddress);
+            var data = sb.ToArray();
 
+            let result = await tools.WWW.rpc_getInvokescript(data);
+            return;
         }
 
         //解析域名完整模式
@@ -195,12 +208,12 @@
          * @param nnshash   域名中除最后一位的hash : aa.bb.cc 中的 bb.cc的hash
          * @param subdomain 域名中的最后一位: aa.bb.cc 中的 aa
          */
-        static async getSubOwner(nnshash: Uint8Array, subdomain: string): Promise<Uint8Array>
+        static async getSubOwner(nnshash: Uint8Array, subdomain: string, scriptaddress: Uint8Array): Promise<string>
         {
 
-            let owner: Uint8Array
+            let owner: string="";
             var sb = new ThinNeo.ScriptBuilder();
-            var scriptaddress = entity.Consts.registerContract.hexToBytes().reverse();
+            //var scriptaddress = entity.Consts.registerContract.hexToBytes().reverse();
             sb.EmitParamJson(["(bytes)" + nnshash.toHexString(), "(str)" + subdomain]);//第二个参数是个数组
             sb.EmitPushString("getSubOwner");
             sb.EmitAppCall(scriptaddress);
@@ -215,12 +228,15 @@
                 if (state.includes("HALT"))
                 {
                     // info2.textContent += "Succ\n";
-                }
-                var stack = result.stack as any[];
-                //find name 他的type 有可能是string 或者ByteArray
-                if (stack[0].type == "ByteArray")
-                {
-                    owner = (stack[0].value as string).hexToBytes();
+                    var stack = result.stack as any[];
+                    //find name 他的type 有可能是string 或者ByteArray
+                    if (stack[0].type == "ByteArray")
+                    {
+                        if (stack[0].value as string != "00")
+                        {
+                            owner = ThinNeo.Helper.GetAddressFromScriptHash((stack[0].value as string).hexToBytes());
+                        }
+                    }
                 }
             }
             catch (e)

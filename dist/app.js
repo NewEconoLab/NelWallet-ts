@@ -42,11 +42,9 @@ var wallet;
                 this.nep5.init(this);
                 this.walletController.start(this);
                 this.walletFunction.init(this);
+                var rootNameHash = yield wallet.tools.NNS.getRootNameHash();
+                this.domainInfo = yield wallet.tools.NNS.getDomainInfo(rootNameHash);
                 this.domain.init(this);
-                var namehash1 = yield wallet.tools.NNS.getNameHash("aa");
-                console.log(namehash1.toHexString);
-                var namehash2 = wallet.tools.NNS.nameHash("aa");
-                console.log(namehash2.toHexString);
             });
         }
     }
@@ -928,33 +926,17 @@ var wallet;
                 this.body.appendChild(queryForm);
                 this.body.appendChild(queryBtn);
                 this.body.appendChild(registerBtn);
-                queryBtn.onclick = () => __awaiter(this, void 0, void 0, function* () {
+                registerBtn.onclick = () => __awaiter(this, void 0, void 0, function* () {
+                    var who = this.app.loadKey.address;
                     var domainarr = domainInput.value.split('.');
                     var subdomain = domainarr[0];
                     var root = yield wallet.tools.NNS.getRootName();
                     domainarr.shift();
                     domainarr.push(root);
                     var nnshash = wallet.tools.NNS.nameHashArray(domainarr);
-                    let domains = yield wallet.tools.NNS.getSubOwner(nnshash, subdomain);
-                    if (!domains.length[0]) {
-                        alert("此域名为空!!!");
-                    }
-                    //let rootname: Uint8Array = await tools.NNS.getRootNameHash();
-                    //let nnshash: Uint8Array = await tools.NNS.getNameHash(rootname);
-                    //let info: entity.DomainInfo = await tools.NNS.getDomainInfo(nnshash); 
-                    //let res = await tools.NNS.getSubOwner(nnshash, domainInput.value);
-                    //console.log(res[0]);
-                    //if (!res[0])
-                    //{
-                    //    alert("这个域名为空");
-                    //}
-                });
-                registerBtn.onclick = () => __awaiter(this, void 0, void 0, function* () {
-                    var who = "";
-                    var nnshash = "";
-                    var subdomain = "";
                     var utxos = yield wallet.tools.WWW.api_getUTXO(this.app.loadKey.address);
                     let allAsset = yield wallet.tools.WWW.api_getAllAssets();
+                    console.log(allAsset);
                     utxos.map((item) => {
                         item.name = allAsset.find(val => val.id == item.asset).name.map((name) => { return name.name; }).join("|");
                     });
@@ -970,9 +952,9 @@ var wallet;
                         tran.extdata = new ThinNeo.InvokeTransData();
                         let script = null;
                         var sb = new ThinNeo.ScriptBuilder();
-                        var scriptaddress = "dffbdd534a41dd4c56ba5ccba9dfaaf4f84e1362".hexToBytes().reverse();
-                        sb.EmitParamJson(["(address)" + who, "(ByteArray)" + nnshash, "(str)" + subdomain]); //第二个参数是个数组
-                        sb.EmitPushString("transfer"); //第一个参数
+                        var scriptaddress = this.app.domainInfo.register;
+                        sb.EmitParamJson(["(addr)" + who, "(bytes)" + nnshash.toHexString(), "(str)" + subdomain]); //第二个参数是个数组
+                        sb.EmitPushString("requestSubDomain"); //第一个参数
                         sb.EmitAppCall(scriptaddress); //资产合约
                         tran.extdata.script = sb.ToArray();
                         //估计一个gas用量
@@ -980,6 +962,21 @@ var wallet;
                         //如果估计gas用量>10,交易必须丢弃gas，否则智能合约执行会失败
                         tran.extdata.gas = Neo.Fixed8.fromNumber(1.0);
                         this.app.transaction.setTran(tran);
+                    }
+                });
+                queryBtn.onclick = () => __awaiter(this, void 0, void 0, function* () {
+                    var domainarr = domainInput.value.split('.');
+                    var subdomain = domainarr[0];
+                    var root = yield wallet.tools.NNS.getRootName();
+                    domainarr.shift();
+                    domainarr.push(root);
+                    var nnshash = wallet.tools.NNS.nameHashArray(domainarr);
+                    let domains = yield wallet.tools.NNS.getSubOwner(nnshash, subdomain, this.app.domainInfo.register);
+                    if (domains) {
+                        alert("domain:" + domains);
+                    }
+                    else {
+                        alert("此域名为空!!!");
                     }
                 });
             }
@@ -1423,7 +1420,7 @@ var wallet;
                     var sb = new ThinNeo.ScriptBuilder();
                     sb.EmitParamJson(JSON.parse("[]"));
                     sb.EmitPushString("rootName");
-                    var scriptaddress = "0xdffbdd534a41dd4c56ba5ccba9dfaaf4f84e1362".hexToBytes().reverse();
+                    var scriptaddress = wallet.entity.Consts.baseContract.hexToBytes().reverse();
                     sb.EmitAppCall(scriptaddress);
                     var data = sb.ToArray();
                     let result = yield tools.WWW.rpc_getInvokescript(data);
@@ -1457,7 +1454,7 @@ var wallet;
                     var sb = new ThinNeo.ScriptBuilder();
                     sb.EmitParamJson(JSON.parse("[]"));
                     sb.EmitPushString("rootNameHash");
-                    var scriptaddress = "0xdffbdd534a41dd4c56ba5ccba9dfaaf4f84e1362".hexToBytes().reverse();
+                    var scriptaddress = wallet.entity.Consts.baseContract.hexToBytes().reverse();
                     sb.EmitAppCall(scriptaddress);
                     var data = sb.ToArray();
                     let result = yield tools.WWW.rpc_getInvokescript(data);
@@ -1484,8 +1481,8 @@ var wallet;
                 return __awaiter(this, void 0, void 0, function* () {
                     let info = new wallet.entity.DomainInfo();
                     var sb = new ThinNeo.ScriptBuilder();
-                    var scriptaddress = "0xdffbdd534a41dd4c56ba5ccba9dfaaf4f84e1362".hexToBytes().reverse();
-                    sb.EmitParamJson(["(bytes)" + domain.toHexString]); //第二个参数是个数组
+                    var scriptaddress = wallet.entity.Consts.baseContract.hexToBytes().reverse();
+                    sb.EmitParamJson(["(bytes)" + domain.toHexString()]); //第二个参数是个数组
                     sb.EmitPushString("getInfo");
                     sb.EmitAppCall(scriptaddress);
                     var data = sb.ToArray();
@@ -1496,18 +1493,21 @@ var wallet;
                         if (state.includes("HALT")) {
                             // info2.textContent += "Succ\n";
                         }
-                        var stack = result.stack;
-                        if (stack[0].type == "ByteArray") {
-                            info.owner = stack[0].value.hexToBytes();
-                        }
-                        if (stack[1].type == "ByteArray") {
-                            info.register = stack[1].value.hexToBytes();
-                        }
-                        if (stack[2].type == "ByteArray") {
-                            info.resolver = stack[2].value.hexToBytes();
-                        }
-                        if (stack[3].type == "Integer") {
-                            info.ttl = new Neo.BigInteger(stack[3].value);
+                        var stackarr = result.stack;
+                        if (stackarr[0].type == "Array") {
+                            var stack = stackarr[0].value;
+                            if (stack[0].type == "ByteArray") {
+                                info.owner = stack[0].value.hexToBytes();
+                            }
+                            if (stack[1].type == "ByteArray") {
+                                info.register = stack[1].value.hexToBytes();
+                            }
+                            if (stack[2].type == "ByteArray") {
+                                info.resolver = stack[2].value.hexToBytes();
+                            }
+                            if (stack[3].type == "Integer") {
+                                info.ttl = new Neo.BigInteger(stack[3].value);
+                            }
                         }
                     }
                     catch (e) {
@@ -1520,7 +1520,7 @@ var wallet;
                 return __awaiter(this, void 0, void 0, function* () {
                     let namehash;
                     var sb = new ThinNeo.ScriptBuilder();
-                    var scriptaddress = "0xdffbdd534a41dd4c56ba5ccba9dfaaf4f84e1362".hexToBytes().reverse();
+                    var scriptaddress = wallet.entity.Consts.baseContract.hexToBytes().reverse();
                     sb.EmitParamJson(["(str)" + domain]); //第二个参数是个数组
                     sb.EmitPushString("nameHash");
                     sb.EmitAppCall(scriptaddress);
@@ -1569,11 +1569,11 @@ var wallet;
              * @param nnshash   域名中除最后一位的hash : aa.bb.cc 中的 bb.cc的hash
              * @param subdomain 域名中的最后一位: aa.bb.cc 中的 aa
              */
-            static getSubOwner(nnshash, subdomain) {
+            static getSubOwner(nnshash, subdomain, scriptaddress) {
                 return __awaiter(this, void 0, void 0, function* () {
-                    let owner;
+                    let owner = "";
                     var sb = new ThinNeo.ScriptBuilder();
-                    var scriptaddress = wallet.entity.Consts.registerContract.hexToBytes().reverse();
+                    //var scriptaddress = entity.Consts.registerContract.hexToBytes().reverse();
                     sb.EmitParamJson(["(bytes)" + nnshash.toHexString(), "(str)" + subdomain]); //第二个参数是个数组
                     sb.EmitPushString("getSubOwner");
                     sb.EmitAppCall(scriptaddress);
@@ -1584,11 +1584,13 @@ var wallet;
                         // info2.textContent = "";
                         if (state.includes("HALT")) {
                             // info2.textContent += "Succ\n";
-                        }
-                        var stack = result.stack;
-                        //find name 他的type 有可能是string 或者ByteArray
-                        if (stack[0].type == "ByteArray") {
-                            owner = stack[0].value.hexToBytes();
+                            var stack = result.stack;
+                            //find name 他的type 有可能是string 或者ByteArray
+                            if (stack[0].type == "ByteArray") {
+                                if (stack[0].value != "00") {
+                                    owner = ThinNeo.Helper.GetAddressFromScriptHash(stack[0].value.hexToBytes());
+                                }
+                            }
                         }
                     }
                     catch (e) {

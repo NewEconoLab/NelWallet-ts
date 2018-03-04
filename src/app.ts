@@ -19,6 +19,7 @@ namespace wallet
         nep5: module.Nep5;
         loadKey: entity.loadKey;
         utxos: entity.UTXO[];
+        domainInfo: entity.DomainInfo;
         main: HTMLDivElement;
         constructor()
         {
@@ -59,12 +60,10 @@ namespace wallet
 
             this.walletFunction.init(this);
 
-            this.domain.init(this);
+            var rootNameHash = await tools.NNS.getRootNameHash()
+            this.domainInfo = await tools.NNS.getDomainInfo(rootNameHash);
 
-            var namehash1 = await tools.NNS.getNameHash("aa");
-            console.log(namehash1.toHexString);
-            var namehash2 = tools.NNS.nameHash("aa");
-            console.log(namehash2.toHexString);
+            this.domain.init(this);
 
         }
     }

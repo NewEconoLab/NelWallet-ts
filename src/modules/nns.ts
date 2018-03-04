@@ -21,44 +21,26 @@
             var domainInput = tools.BootsModule.createInput("text", "form-control", "Please enter the domain name you want to query");
             var queryBtn = tools.BootsModule.createBtn("search", "btn-info");
             var registerBtn = tools.BootsModule.createBtn("注册", "btn-info");
+            var resolveBtn = tools.BootsModule.createBtn("解析http", "btn-info");
             var queryForm = tools.BootsModule.getFormGroup("Query domain");
             queryForm.appendChild(domainInput);
             this.body.appendChild(queryForm);
             this.body.appendChild(queryBtn);
             this.body.appendChild(registerBtn);
+            this.body.appendChild(resolveBtn);
 
-            queryBtn.onclick = async () =>
+            registerBtn.onclick = async () =>
             {
+                var who: string = this.app.loadKey.address;
                 var domainarr: string[] = domainInput.value.split('.');
                 var subdomain: string = domainarr[0];
                 var root: string = await tools.NNS.getRootName();
                 domainarr.shift();
                 domainarr.push(root)
                 var nnshash: Uint8Array = tools.NNS.nameHashArray(domainarr);
-                let domains = await tools.NNS.getSubOwner(nnshash, subdomain);
-                if (!domains.length[0])
-                {
-                    alert("此域名为空!!!");
-                }
-                //let rootname: Uint8Array = await tools.NNS.getRootNameHash();
-                //let nnshash: Uint8Array = await tools.NNS.getNameHash(rootname);
-                //let info: entity.DomainInfo = await tools.NNS.getDomainInfo(nnshash); 
-                //let res = await tools.NNS.getSubOwner(nnshash, domainInput.value);
-                //console.log(res[0]);
-                //if (!res[0])
-                //{
-                //    alert("这个域名为空");
-                //}
-            }
-
-            registerBtn.onclick = async () =>
-            {
-                var who: string = "";
-                var nnshash = "";
-                var subdomain = "";
-
                 var utxos = await wallet.tools.WWW.api_getUTXO(this.app.loadKey.address);
                 let allAsset: entity.Asset[] = await wallet.tools.WWW.api_getAllAssets();
+                console.log(allAsset);
                 utxos.map((item) =>
                 {
                     item.name = allAsset.find(val => val.id == item.asset).name.map((name) => { return name.name }).join("|");
@@ -77,9 +59,9 @@
                     tran.extdata = new ThinNeo.InvokeTransData();
                     let script = null;
                     var sb = new ThinNeo.ScriptBuilder();
-                    var scriptaddress = "dffbdd534a41dd4c56ba5ccba9dfaaf4f84e1362".hexToBytes().reverse();
-                    sb.EmitParamJson(["(address)" + who, "(ByteArray)" + nnshash, "(str)" + subdomain]);//第二个参数是个数组
-                    sb.EmitPushString("transfer");//第一个参数
+                    var scriptaddress = this.app.domainInfo.register;
+                    sb.EmitParamJson(["(addr)" + who, "(bytes)" + nnshash.toHexString(), "(str)" + subdomain]);//第二个参数是个数组
+                    sb.EmitPushString("requestSubDomain");//第一个参数
                     sb.EmitAppCall(scriptaddress);  //资产合约
                     (tran.extdata as ThinNeo.InvokeTransData).script = sb.ToArray();
                     //估计一个gas用量
@@ -90,6 +72,26 @@
                     this.app.transaction.setTran(tran);
                 }
             }
+
+            queryBtn.onclick = async () =>
+            {
+                var domainarr: string[] = domainInput.value.split('.');
+                var subdomain: string = domainarr[0];
+                var root: string = await tools.NNS.getRootName();
+                domainarr.shift();
+                domainarr.push(root)
+                var nnshash: Uint8Array = tools.NNS.nameHashArray(domainarr);
+                let domains = await tools.NNS.getSubOwner(nnshash, subdomain, this.app.domainInfo.register);
+                if (domains)
+                {
+                    alert("domain:" + domains);
+                } else
+                {
+                    alert("此域名为空!!!");
+                }
+            }
+
+            
         }
     }
 }   
