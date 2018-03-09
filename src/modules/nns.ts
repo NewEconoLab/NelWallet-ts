@@ -21,13 +21,13 @@
             var domainInput = tools.BootsModule.createInput("text", "form-control", "Please enter the domain name you want to query");
             var queryBtn = tools.BootsModule.createBtn("search", "btn-info");
             var registerBtn = tools.BootsModule.createBtn("注册", "btn-info");
-            var resolveBtn = tools.BootsModule.createBtn("解析http", "btn-info");
+            var infoBtn = tools.BootsModule.createBtn("getInfo", "btn-info");
             var queryForm = tools.BootsModule.getFormGroup("Query domain");
             queryForm.appendChild(domainInput);
             this.body.appendChild(queryForm);
             this.body.appendChild(queryBtn);
             this.body.appendChild(registerBtn);
-            this.body.appendChild(resolveBtn);
+            this.body.appendChild(infoBtn);
 
             registerBtn.onclick = async () =>
             {
@@ -91,6 +91,18 @@
                 }
             }
 
+            infoBtn.onclick = async () =>
+            {
+                var nnshash: Uint8Array = await tools.NNS.getNameHash(domainInput.value)
+                let domains = await tools.NNS.getDomainInfo(nnshash);
+                if (domains)
+                {
+                    alert("domain:" + JSON.stringify(domains));
+                } else
+                {
+                    alert("此域名为空!!!");
+                }
+            }
             
         }
     }

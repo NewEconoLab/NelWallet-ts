@@ -921,11 +921,13 @@ var wallet;
                 var domainInput = wallet.tools.BootsModule.createInput("text", "form-control", "Please enter the domain name you want to query");
                 var queryBtn = wallet.tools.BootsModule.createBtn("search", "btn-info");
                 var registerBtn = wallet.tools.BootsModule.createBtn("注册", "btn-info");
+                var infoBtn = wallet.tools.BootsModule.createBtn("getInfo", "btn-info");
                 var queryForm = wallet.tools.BootsModule.getFormGroup("Query domain");
                 queryForm.appendChild(domainInput);
                 this.body.appendChild(queryForm);
                 this.body.appendChild(queryBtn);
                 this.body.appendChild(registerBtn);
+                this.body.appendChild(infoBtn);
                 registerBtn.onclick = () => __awaiter(this, void 0, void 0, function* () {
                     var who = this.app.loadKey.address;
                     var domainarr = domainInput.value.split('.');
@@ -974,6 +976,16 @@ var wallet;
                     let domains = yield wallet.tools.NNS.getSubOwner(nnshash, subdomain, this.app.domainInfo.register);
                     if (domains) {
                         alert("domain:" + domains);
+                    }
+                    else {
+                        alert("此域名为空!!!");
+                    }
+                });
+                infoBtn.onclick = () => __awaiter(this, void 0, void 0, function* () {
+                    var nnshash = yield wallet.tools.NNS.getNameHash(domainInput.value);
+                    let domains = yield wallet.tools.NNS.getDomainInfo(nnshash);
+                    if (domains) {
+                        alert("domain:" + JSON.stringify(domains));
                     }
                     else {
                         alert("此域名为空!!!");
@@ -1519,29 +1531,13 @@ var wallet;
             static getNameHash(domain) {
                 return __awaiter(this, void 0, void 0, function* () {
                     let namehash;
-                    var sb = new ThinNeo.ScriptBuilder();
-                    var scriptaddress = wallet.entity.Consts.baseContract.hexToBytes().reverse();
-                    sb.EmitParamJson(["(str)" + domain]); //第二个参数是个数组
-                    sb.EmitPushString("nameHash");
-                    sb.EmitAppCall(scriptaddress);
-                    var data = sb.ToArray();
-                    let result = yield tools.WWW.rpc_getInvokescript(data);
-                    try {
-                        var state = result.state;
-                        // info2.textContent = "";
-                        if (state.includes("HALT")) {
-                            // info2.textContent += "Succ\n";
-                        }
-                        var stack = result.stack;
-                        //find name 他的type 有可能是string 或者ByteArray
-                        if (stack[0].type == "ByteArray") {
-                            namehash = stack[0].value.hexToBytes();
-                        }
-                    }
-                    catch (e) {
-                        console.log(e);
-                    }
-                    return namehash;
+                    var domainarr = domain.split('.');
+                    var subdomain = domainarr[0];
+                    var root = yield tools.NNS.getRootName();
+                    domainarr.shift();
+                    domainarr.push(root);
+                    var nnshash = tools.NNS.nameHashArray(domainarr);
+                    return nnshash;
                 });
             }
             //计算子域名hash
@@ -1555,8 +1551,16 @@ var wallet;
                 });
             }
             //解析域名
-            static resolve(protocol, hash, subdomain) {
+            static resolve(protocol, nnshash, scriptaddress) {
                 return __awaiter(this, void 0, void 0, function* () {
+                    let namehash;
+                    var sb = new ThinNeo.ScriptBuilder();
+                    sb.EmitParamJson(["(str)" + protocol, "(bytes)" + nnshash.toHexString()]); //第二个参数是个数组
+                    sb.EmitPushString("resolve");
+                    sb.EmitAppCall(scriptaddress);
+                    var data = sb.ToArray();
+                    let result = yield tools.WWW.rpc_getInvokescript(data);
+                    return;
                 });
             }
             //解析域名完整模式

@@ -139,36 +139,14 @@
         static async getNameHash(domain: string): Promise<Uint8Array>
         {
             let namehash: Uint8Array
-            var sb = new ThinNeo.ScriptBuilder();
-            var scriptaddress = entity.Consts.baseContract.hexToBytes().reverse();
-            sb.EmitParamJson(["(str)" + domain]);//第二个参数是个数组
-            sb.EmitPushString("nameHash");
-            sb.EmitAppCall(scriptaddress);
-            var data = sb.ToArray();
-
-            let result = await tools.WWW.rpc_getInvokescript(data);
-
-            try
-            {
-                var state = result.state as string;
-                // info2.textContent = "";
-                if (state.includes("HALT"))
-                {
-                    // info2.textContent += "Succ\n";
-                }
-                var stack = result.stack as any[];
-                //find name 他的type 有可能是string 或者ByteArray
-                if (stack[0].type == "ByteArray")
-                {
-                    namehash = (stack[0].value as string).hexToBytes();
-                }
-            }
-            catch (e)
-            {
-                console.log(e);
-            }
-
-            return namehash;
+            var domainarr: string[] = domain.split('.');
+            var subdomain: string = domainarr[0];
+            var root: string = await tools.NNS.getRootName();
+            domainarr.shift();
+            domainarr.push(root)
+            var nnshash: Uint8Array = tools.NNS.nameHashArray(domainarr);
+            
+            return nnshash;
         }
 
         //计算子域名hash
@@ -335,6 +313,27 @@
                 hash = NNS.nameHashSub(hash, domainarray[i]);
             }
             return hash;
+        }
+
+        static async setResolveData(owner: string, nnshash: Uint8Array, subdomain: string | Neo.BigInteger, protocol: string, data: string): Promise<boolean>
+        {
+            try
+            {
+                var sb = new ThinNeo.ScriptBuilder();
+                var scriptaddress = entity.Consts.registerContract.hexToBytes().reverse();
+                sb.EmitParamJson(["(addr)" + owner, "(bytes)" + nnshash.toHexString(), "(str)" + subdomain, "(str)addr", "(addr)" + data]);//第二个参数是个数组
+                sb.EmitPushString("getSubOwner");
+                sb.EmitAppCall(scriptaddress);
+                //var data = sb.ToArray();
+
+                //let result = await tools.WWW.rpc_getInvokescript(data);
+
+            }
+            catch (e)
+            {
+
+            }
+            return true;
         }
     }
 
